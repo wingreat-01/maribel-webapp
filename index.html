@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0053)file:///C:/Users/WAREHOUSE-PC/Downloads/index_12.html -->
+<!-- saved from url=(0053)file:///C:/Users/WAREHOUSE-PC/Downloads/index_13.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YMCC Inventory System</title>
@@ -191,10 +191,10 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 </div>
 
 <!-- Non-blocking sync indicator visible during syncNow() without freezing the UI -->
-<div class="sync-indicator show" id="syncIndicator" role="status" aria-live="polite">
+<div class="sync-indicator show err" id="syncIndicator" role="status" aria-live="polite">
   <div class="mini-spinner"></div>
-  <span class="sync-txt" id="syncIndicatorText">Syncing from Google Sheets...</span>
-  <span class="sync-progress" id="syncIndicatorProgress">4/7</span>
+  <span class="sync-txt" id="syncIndicatorText">Sync failed (4.6s) - withdrawal unreachable</span>
+  <span class="sync-progress" id="syncIndicatorProgress"></span>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -207,7 +207,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
     </div>
     <div class="header-actions">
       <div class="sync-status" id="syncStatus"><span class="timer-dot"></span>Auto-sync every 1hr</div>
-      <button class="btn-sync loading" id="syncBtn" onclick="syncNow({force:true})">Syncing...</button>
+      <button class="btn-sync" id="syncBtn" onclick="syncNow({force:true})">Sync Now</button>
       <button class="btn-sync" id="settingsBtn" onclick="toggleSetupPanel()" title="Show setup / config panel" style="background:#FFF3E0;color:#E65100">⚙ Settings</button>
     </div>
   </div>
@@ -279,7 +279,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 <!-- SUMMARY TAB -->
 <div class="tab-panel active" id="tab-summary">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 07:12 PM</div><div class="stat-sub">auto-syncs hourly</div></div>
+    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 07:17 PM</div><div class="stat-sub">auto-syncs hourly</div></div>
     <!-- hidden stat holders so JS still works -->
     <span id="totalItems" style="display:none">321</span>
     <span id="totalReceived" style="display:none">390</span>
