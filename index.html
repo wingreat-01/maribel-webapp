@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0053)file:///C:/Users/WAREHOUSE-PC/Downloads/index_13.html -->
+<!-- saved from url=(0053)file:///C:/Users/WAREHOUSE-PC/Downloads/index_14.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YMCC Inventory System</title>
@@ -191,10 +191,10 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 </div>
 
 <!-- Non-blocking sync indicator visible during syncNow() without freezing the UI -->
-<div class="sync-indicator show err" id="syncIndicator" role="status" aria-live="polite">
+<div class="sync-indicator show" id="syncIndicator" role="status" aria-live="polite">
   <div class="mini-spinner"></div>
-  <span class="sync-txt" id="syncIndicatorText">Sync failed (4.6s) - withdrawal unreachable</span>
-  <span class="sync-progress" id="syncIndicatorProgress"></span>
+  <span class="sync-txt" id="syncIndicatorText">Syncing from Google Sheets...</span>
+  <span class="sync-progress" id="syncIndicatorProgress">4/7</span>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -207,7 +207,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
     </div>
     <div class="header-actions">
       <div class="sync-status" id="syncStatus"><span class="timer-dot"></span>Auto-sync every 1hr</div>
-      <button class="btn-sync" id="syncBtn" onclick="syncNow({force:true})">Sync Now</button>
+      <button class="btn-sync loading" id="syncBtn" onclick="syncNow({force:true})">Syncing...</button>
       <button class="btn-sync" id="settingsBtn" onclick="toggleSetupPanel()" title="Show setup / config panel" style="background:#FFF3E0;color:#E65100">⚙ Settings</button>
     </div>
   </div>
@@ -571,7 +571,7 @@ function loadState() {
       STATE.received = parsed.received || [];
       STATE.returns = parsed.returns || [];
       STATE.config = parsed.config || {withdrawalUrl:'',withdrawalRecentUrl:'',receivedUrl:'',returnUrl:'',dataUrl:''};
-      STATE.config.proxyUrl = ''; // not used for reads — CSV-only mode
+      // proxyUrl kept for fetchCSV proxy fallback (withdrawal CSV fetch)
       if (!STATE.config.dataUrl) STATE.config.dataUrl = '';
       if (!STATE.config.withdrawalRecentUrl) STATE.config.withdrawalRecentUrl = '';
       STATE.lastSync = parsed.lastSync || null;
@@ -599,7 +599,7 @@ function init() {
   // Hard-coded current URLs (overwrite any stale localStorage values so every
   // browser — yours or coworker's — picks up the latest deployment automatically).
   // ── IMPORTANT: Replace this with your own Apps Script Web App URL after deploying Code.gs ──
-  STATE.config.proxyUrl = STATE.config.proxyUrl || ''; // Set via Settings panel or deploy Code.gs and paste URL here
+  STATE.config.proxyUrl = 'https://script.google.com/macros/s/AKfycbxJ3eW5ygBLDJSWMo50CMVcO3YRvAQwfhsH7DRXuTx3hZ3hlEdxwkS2_20tVOBLBHp-eA/exec';
   STATE.config.withdrawalUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzQDca-tpfhqLkePumDjV1IrY0Z2YXXJI9EwZtXOuuUORjpG2-Fg-Ro5uqn6csb4IT7-MAM2GSzAIH/pub?gid=1565040271&single=true&output=csv';
   STATE.config.dataUrl = '';
   saveState();
@@ -2152,7 +2152,10 @@ function fetchCSV(url, onSuccess, onError, opts) {
   // 2. User's Apps Script proxy (reliable fallback)
   if (proxy) attempts.push({url: proxy + '?url=' + enc, type: 'text', name: 'appsScript'});
 
-  // 3. allorigins JSON (last-resort public proxy)
+  // 3. corsproxy.io — fast public proxy
+  attempts.push({url: 'https://corsproxy.io/?' + enc, type: 'text', name: 'corsproxy'});
+
+  // 4. allorigins JSON (last-resort public proxy)
   attempts.push({
     url: 'https://api.allorigins.win/get?url=' + enc,
     type: 'json',
