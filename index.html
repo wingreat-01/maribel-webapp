@@ -808,9 +808,15 @@ function parseItemCodeCSV(csvText) {
       size = fUom.charAt(0).toUpperCase() + fUom.slice(1).toLowerCase();
     }
 
-    // Deduplicate by code — first occurrence wins
-    if (seen[code]) continue;
-    seen[code] = true;
+    // Deduplicate by code — first occurrence with a non-empty description wins;
+    // if we already have this code but with no description, upgrade it.
+    if (seen[code] !== undefined) {
+      if (!results[seen[code]].desc && desc) {
+        results[seen[code]].desc = desc;
+      }
+      continue;
+    }
+    seen[code] = results.length;
 
     results.push({code: code, desc: desc, unit: size, size: size});
   }
@@ -1143,6 +1149,8 @@ function renderWithdrawal() {
   var html = '';
   display.forEach(function(w) {
     var item = STATE.items.find(function(it){ return it.code === w.itemCode; }) || {};
+    // Always re-resolve desc in case items loaded after withdrawal (race condition)
+    if (!w.desc && item.desc) w.desc = item.desc;
     var desc = w.desc || item.desc || '—';
     // Balance comes directly from sheet col K (Avail Bal)
     var bal = (w.balance !== null && w.balance !== undefined && !isNaN(w.balance)) ? w.balance : null;
