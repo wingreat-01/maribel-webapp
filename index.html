@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0052)file:///C:/Users/WAREHOUSE-PC/Downloads/index_6.html -->
+<!-- saved from url=(0052)file:///C:/Users/WAREHOUSE-PC/Downloads/index_8.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YMCC Inventory System</title>
@@ -194,7 +194,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 <div class="sync-indicator show" id="syncIndicator" role="status" aria-live="polite">
   <div class="mini-spinner"></div>
   <span class="sync-txt" id="syncIndicatorText">Syncing from Google Sheets...</span>
-  <span class="sync-progress" id="syncIndicatorProgress">4/7</span>
+  <span class="sync-progress" id="syncIndicatorProgress">5/7</span>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -279,7 +279,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 <!-- SUMMARY TAB -->
 <div class="tab-panel active" id="tab-summary">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 05:51 PM</div><div class="stat-sub">auto-syncs hourly</div></div>
+    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 06:46 PM</div><div class="stat-sub">auto-syncs hourly</div></div>
     <!-- hidden stat holders so JS still works -->
     <span id="totalItems" style="display:none">321</span>
     <span id="totalReceived" style="display:none">390</span>
@@ -495,7 +495,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 <script>
 // ITEMCODES tab — col I = frontend family_code (item code), col J = frontend canonical_description
 // gid=541485346 is the ITEMCODES tab (visible in the Google Sheet URL bar)
-var ITEMCODE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTljhkOp-580AkSuRHN3f298NT9rZSXRTRbkF-BUaZatK7_hXHzqt-xTtoqX8k9RgGv2fF7lIhT7l_R/pub?gid=541485346&single=true&output=csv';
+var ITEMCODE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzQDca-tpfhqLkePumDjV1IrY0Z2YXXJI9EwZtXOuuUORjpG2-Fg-Ro5uqn6csb4IT7-MAM2GSzAIH/pub?gid=541485346&single=true&output=csv';
 
 // ── Item code allowlist for this coworker's view ──
 // These codes correspond to the following item descriptions in the Sales Order sheet (column S):
@@ -599,8 +599,8 @@ function init() {
   // browser — yours or coworker's — picks up the latest deployment automatically).
   // ── IMPORTANT: Replace this with your own Apps Script Web App URL after deploying Code.gs ──
   STATE.config.proxyUrl = STATE.config.proxyUrl || ''; // Set via Settings panel or deploy Code.gs and paste URL here
-  STATE.config.withdrawalUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTljhkOp-580AkSuRHN3f298NT9rZSXRTRbkF-BUaZatK7_hXHzqt-xTtoqX8k9RgGv2fF7lIhT7l_R/pub?gid=1482845223&single=true&output=csv';
-  STATE.config.dataUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTljhkOp-580AkSuRHN3f298NT9rZSXRTRbkF-BUaZatK7_hXHzqt-xTtoqX8k9RgGv2fF7lIhT7l_R/pub?gid=1228661657&single=true&output=csv';
+  STATE.config.withdrawalUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzQDca-tpfhqLkePumDjV1IrY0Z2YXXJI9EwZtXOuuUORjpG2-Fg-Ro5uqn6csb4IT7-MAM2GSzAIH/pub?gid=1565040271&single=true&output=csv';
+  STATE.config.dataUrl = '';
   saveState();
   if (document.getElementById('proxyUrl')) document.getElementById('proxyUrl').value = STATE.config.proxyUrl;
   if (document.getElementById('gsheetWithdrawal')) document.getElementById('gsheetWithdrawal').value = STATE.config.withdrawalUrl;
