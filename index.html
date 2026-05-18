@@ -1,0 +1,2680 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YMCC Inventory System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+:root{--blue:#1565C0;--blue-light:#E3F2FD;--blue-mid:#1976D2;--green:#2E7D32;--green-light:#E8F5E9;--amber:#F57F17;--amber-light:#FFFDE7;--red:#C62828;--red-light:#FFEBEE;--teal:#00695C;--teal-light:#E0F2F1;--purple:#6A1B9A;--purple-light:#F3E5F5;--gray:#455A64;--surface:#fff;--border:#E0E0E0;--shadow:0 2px 8px rgba(0,0,0,0.1)}
+
+.sticky-top{position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.15)}
+header{background:linear-gradient(135deg,#0D47A1 0%,#1565C0 60%,#1976D2 100%);color:#fff;padding:0}
+.header-inner{display:flex;align-items:center;gap:16px;padding:12px 20px}
+.logo{width:42px;height:42px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0D47A1;flex-shrink:0}
+.header-title h1{font-size:18px;font-weight:700;letter-spacing:0.3px}
+.header-title p{font-size:12px;opacity:0.8;margin-top:2px}
+.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.sync-status{font-size:12px;opacity:0.85;background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:20px}
+.btn-sync{background:#fff;color:#0D47A1;border:none;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s}
+.btn-sync:hover{background:#E3F2FD}
+.btn-sync.loading{opacity:0.7;cursor:not-allowed}
+
+nav{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px;overflow-x:auto;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.nav-tab{padding:12px 18px;font-size:13px;font-weight:600;color:#607D8B;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;display:flex;align-items:center;gap:7px}
+.nav-tab:hover{color:#1565C0;background:#F5F9FF}
+.nav-tab.active{color:#1565C0;border-bottom-color:#1565C0;background:#EEF4FF}
+.tab-icon{font-size:15px}
+
+.content{padding:16px 20px;max-width:1400px;margin:0 auto}
+
+.search-bar{background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.search-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search-input-wrap{position:relative;flex:1;min-width:200px}
+.search-input-wrap input{width:100%;padding:9px 14px 9px 38px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#F8FAFC;color:#1a1a2e;transition:all 0.2s}
+.search-input-wrap input:focus{outline:none;border-color:#1565C0;background:#fff;box-shadow:0 0 0 3px rgba(21,101,192,0.12)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#90A4AE;font-size:15px}
+.filter-select{padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#F8FAFC;color:#1a1a2e;cursor:pointer;min-width:140px}
+.filter-select:focus{outline:none;border-color:#1565C0}
+/* ── Item Picker ── */
+.item-picker{position:fixed;background:#fff;border:1px solid #1565C0;border-radius:10px;z-index:9999;box-shadow:0 8px 28px rgba(21,101,192,0.22);overflow:hidden;display:none;min-width:480px;max-width:680px;width:680px}
+.item-picker-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#EEF4FF;border-bottom:1px solid #D0E4FF;font-size:12px;font-weight:700;color:#1565C0;gap:8px}
+.item-picker-header span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picker-actions{display:flex;gap:6px;flex-shrink:0}
+.picker-btn{font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid #1565C0;cursor:pointer;background:#fff;color:#1565C0;transition:all 0.15s;white-space:nowrap}
+.picker-btn:hover{background:#1565C0;color:#fff}
+.picker-btn.go{background:#1565C0;color:#fff}
+.picker-btn.go:hover{background:#0D47A1}
+.item-picker-list{max-height:280px;overflow-y:auto;overflow-x:hidden}
+.picker-row{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #F0F4FF;cursor:pointer;transition:background 0.12s;user-select:none}
+.picker-row:last-child{border-bottom:none}
+.picker-row:hover{background:#F0F6FF}
+.picker-row.checked{background:#EEF4FF}
+.picker-checkbox{width:15px;height:15px;accent-color:#1565C0;cursor:pointer;flex-shrink:0;margin-right:12px}
+.picker-code{font-weight:700;color:#1565C0;font-size:12px;font-family:monospace;flex-shrink:0;width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:16px}
+.picker-desc{font-size:12px;color:#607D8B;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* selected tags strip */
+.selected-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:0}
+.sel-tag{display:inline-flex;align-items:center;gap:5px;background:#EEF4FF;border:1px solid #90CAF9;color:#1565C0;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+.sel-tag-x{cursor:pointer;font-size:14px;line-height:1;color:#90A4AE;transition:color 0.15s}
+.sel-tag-x:hover{color:#C62828}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);border:1px solid var(--border);border-left:4px solid var(--accent)}
+.stat-label{font-size:11px;font-weight:600;color:#78909C;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:700;color:var(--accent)}
+.stat-sub{font-size:11px;color:#90A4AE;margin-top:3px}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.badge{background:#EEF4FF;color:#1565C0;font-size:11px;font-weight:600;padding:3px 9px;border-radius:12px}
+
+.card{background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:#F5F8FF;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#607D8B;text-transform:uppercase;letter-spacing:0.6px;border-bottom:2px solid #E3EAF5;white-space:nowrap}
+tbody tr{border-bottom:1px solid #F0F0F0;transition:background 0.15s}
+tbody tr:hover{background:#F8FAFF}
+tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
+.td-code{font-family:monospace;font-size:12px;color:#1565C0;font-weight:600}
+.pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600}
+.pill-green{background:#E8F5E9;color:#2E7D32}
+.pill-amber{background:#FFF8E1;color:#E65100}
+.pill-red{background:#FFEBEE;color:#C62828}
+.pill-blue{background:#E3F2FD;color:#1565C0}
+.pill-gray{background:#ECEFF1;color:#455A64}
+
+.empty-state{text-align:center;padding:48px 20px;color:#90A4AE}
+.empty-icon{font-size:40px;margin-bottom:10px;opacity:0.5}
+.empty-text{font-size:14px}
+
+.form-card{background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:12px;font-weight:600;color:#607D8B;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:#1a1a2e;background:#F8FAFC;transition:all 0.2s}
+.form-input:focus{outline:none;border-color:#1565C0;background:#fff;box-shadow:0 0 0 3px rgba(21,101,192,0.12)}
+.btn-primary{background:#1565C0;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:7px}
+.btn-primary:hover{background:#0D47A1;transform:translateY(-1px);box-shadow:0 4px 12px rgba(21,101,192,0.3)}
+.btn-secondary{background:#F5F5F5;color:#455A64;border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-secondary:hover{background:#ECEFF1}
+.btn-danger{background:#fff;color:#C62828;border:1px solid #FFCDD2;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-danger:hover{background:#FFEBEE}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+.gsheet-config{background:var(--amber-light);border:1px solid #FFE082;border-radius:12px;padding:16px;margin-bottom:16px}
+.gsheet-config h3{color:var(--amber);font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.gsheet-steps{font-size:13px;color:#5D4037;line-height:1.7}
+.gsheet-steps code{background:#FFF8E1;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px;color:#BF360C}
+.setup-input-wrap{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.setup-input{flex:1;min-width:200px;padding:9px 12px;border:1px solid #FFE082;border-radius:8px;font-size:13px;background:#fff}
+.setup-input:focus{outline:none;border-color:var(--amber)}
+
+.toast{position:fixed;bottom:24px;right:24px;background:#323232;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:1000;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,0.25)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:#2E7D32}
+.toast.error{background:#C62828}
+
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,0.8);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-size:14px;color:#1565C0}
+.spinner{width:36px;height:36px;border:3px solid #E3F2FD;border-top-color:#1565C0;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Non-blocking sync indicator (bottom-left pill) replaces full-screen overlay for syncNow */
+.sync-indicator{position:fixed;bottom:24px;left:24px;background:#fff;color:#1565C0;border:1px solid #90CAF9;border-radius:24px;padding:10px 16px 10px 12px;display:none;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(21,101,192,0.25);z-index:150;min-width:240px;max-width:380px;transition:all 0.25s}
+.sync-indicator.show{display:flex}
+.sync-indicator .mini-spinner{width:18px;height:18px;border:2.5px solid #E3F2FD;border-top-color:#1565C0;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+.sync-indicator .sync-txt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync-indicator .sync-progress{font-size:11px;color:#90A4AE;font-weight:500;margin-left:4px;flex-shrink:0}
+.sync-indicator.done{border-color:#81C784;color:#2E7D32;background:#F1F8E9}
+.sync-indicator.done .mini-spinner{border:2.5px solid #C8E6C9;border-top-color:#2E7D32;animation:none}
+.sync-indicator.err{border-color:#EF9A9A;color:#C62828;background:#FFEBEE}
+.sync-indicator.err .mini-spinner{border:2.5px solid #FFCDD2;border-top-color:#C62828;animation:none}
+@media(max-width:600px){.sync-indicator{left:12px;right:12px;bottom:12px;min-width:0;max-width:none}}
+
+.search-result-panel{background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px;display:none}
+.result-header{font-size:16px;font-weight:700;color:#1565C0;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.result-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.result-stat{background:#F5F8FF;border-radius:8px;padding:10px 14px}
+.result-stat-label{font-size:11px;color:#78909C;font-weight:600;margin-bottom:3px}
+.result-stat-value{font-size:18px;font-weight:700;color:#1565C0}
+
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:#FAFAFA}
+.page-info{font-size:12px;color:#78909C}
+.page-btns{display:flex;gap:4px}
+.page-btn{padding:5px 11px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;background:#fff;color:#455A64;transition:all 0.15s}
+.page-btn:hover{background:#EEF4FF;border-color:#1565C0;color:#1565C0}
+.page-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+.timer-dot{width:8px;height:8px;border-radius:50%;background:#4CAF50;display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+@media(max-width:600px){
+  .header-inner{padding:10px 12px;gap:10px}
+  .header-title h1{font-size:15px}
+  .header-actions .sync-status{display:none}
+  nav{padding:0 8px}
+  .nav-tab{padding:10px 12px;font-size:12px}
+  .content{padding:12px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── PIN Modal ── */
+.pin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:600;display:none;align-items:center;justify-content:center}
+.pin-overlay.show{display:flex}
+.pin-box{background:#fff;border-radius:16px;padding:32px 28px;box-shadow:0 8px 32px rgba(0,0,0,0.25);text-align:center;max-width:300px;width:90%}
+.pin-box h2{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.pin-box p{font-size:13px;color:#607D8B;margin-bottom:18px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:20px}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid #90A4AE;background:transparent;transition:all 0.2s}
+.pin-dot.filled{background:#1565C0;border-color:#1565C0}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:210px;margin:0 auto 10px}
+.pin-key{padding:14px;font-size:18px;font-weight:700;border:1px solid var(--border);border-radius:10px;background:#F5F8FF;cursor:pointer;color:#1a1a2e;transition:all 0.15s}
+.pin-key:hover{background:#1565C0;color:#fff;border-color:#1565C0}
+.pin-key.del{font-size:14px;background:#FFF3E0;color:#E65100;border-color:#FFE0B2}
+.pin-key.del:hover{background:#E65100;color:#fff;border-color:#E65100}
+.pin-errmsg{color:#C62828;font-size:12px;font-weight:600;min-height:18px;margin-bottom:10px}
+.pin-cancel{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:#F5F5F5;color:#455A64;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.pin-cancel:hover{background:#ECEFF1}
+/* ── Footer ── */
+.app-footer{text-align:center;padding:18px 20px 22px;font-size:12px;color:#757575;border-top:1px solid #E0E0E0;background:#fafafa;margin-top:24px;letter-spacing:0.2px}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <span id="loadingText">Syncing from Google Sheets...</span>
+</div>
+
+<!-- Non-blocking sync indicator visible during syncNow() without freezing the UI -->
+<div class="sync-indicator" id="syncIndicator" role="status" aria-live="polite">
+  <div class="mini-spinner"></div>
+  <span class="sync-txt" id="syncIndicatorText">Syncing...</span>
+  <span class="sync-progress" id="syncIndicatorProgress"></span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="sticky-top">
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>YMCC Inventory System</h1>
+    </div>
+    <div class="header-actions">
+      <div class="sync-status" id="syncStatus"><span class="timer-dot"></span>Auto-sync every 1hr</div>
+      <button class="btn-sync" id="syncBtn" onclick="syncNow({force:true})">↻ Sync Now</button>
+      <button class="btn-sync" id="settingsBtn" onclick="toggleSetupPanel()" title="Show setup / config panel" style="background:#FFF3E0;color:#E65100">⚙ Settings</button>
+    </div>
+  </div>
+</header>
+
+<nav id="mainNav">
+  <button class="nav-tab active" onclick="switchTab(&#39;summary&#39;)"><span class="tab-icon">■</span>Summary</button>
+  <button class="nav-tab" onclick="switchTab(&#39;beginning&#39;)"><span class="tab-icon">△</span>Beginning</button>
+  <button class="nav-tab" onclick="switchTab(&#39;withdrawal&#39;)"><span class="tab-icon">↗</span>Withdrawal</button>
+  <button class="nav-tab" onclick="switchTab(&#39;received&#39;)"><span class="tab-icon">↘</span>Received</button>
+  <button class="nav-tab" onclick="switchTab(&#39;return&#39;)"><span class="tab-icon">↩</span>Returns</button>
+  <button class="nav-tab" onclick="switchTab(&#39;search&#39;)"><span class="tab-icon">⚲</span>Search</button>
+</nav>
+</div><!-- /sticky-top -->
+
+<div class="content">
+
+<!-- GOOGLE SHEETS SETUP PANEL -->
+<div class="gsheet-config" id="setupPanel" style="display: none;">
+  <h3>⚙ Google Apps Script Backend Configuration</h3>
+  <div class="gsheet-steps">
+    <p><strong>Backend is managed via Google Apps Script (Code.gs from the repository).</strong></p>
+    <ol style="margin:6px 0 0 18px;line-height:2.1;font-size:13px">
+      <li>Open your Google Sheet → <code>Extensions → Apps Script</code></li>
+      <li>Copy the contents of <strong>Code.gs</strong> from the GitHub repository and paste it there</li>
+      <li>Set <code>SHEET_ID</code> at the top of <code>Code.gs</code> to your Google Sheet ID</li>
+      <li>Click <strong>Deploy → New deployment → Web app</strong></li>
+      <li>Set <em>Execute as</em> = <strong>Me</strong> &nbsp;|&nbsp; <em>Who has access</em> = <strong>Anyone</strong></li>
+      <li>Copy the <strong>Web App URL</strong> and paste it below</li>
+    </ol>
+    <p style="color:#BF360C;font-size:12px;margin:8px 0">⚠ If prompted for permissions, click <strong>Review permissions → Allow</strong>.</p>
+    <p><strong>Step 2 — Paste your URLs below and click Save &amp; Connect:</strong></p>
+  </div>
+  <div id="urlTestResult" style="margin-top:8px;font-size:12px;display:none;padding:10px 14px;border-radius:8px;line-height:1.8"></div>
+</div>
+
+<!-- SEARCH BAR (global) -->
+<div class="search-bar">
+  <div class="search-row">
+    <div class="search-input-wrap" style="position:relative">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="globalSearch" placeholder="Search by item code, description, cutting no., shipment no...." autocomplete="off" oninput="handleSearchInput(this.value)" onkeydown="handleSearchKey(event)">
+    </div>
+    <select class="filter-select" id="searchFilter">
+      <option value="all">All Categories</option>
+      <option value="withdrawal">Withdrawals</option>
+      <option value="received">Received</option>
+      <option value="return">Returns</option>
+      <option value="beginning">Beginning</option>
+    </select>
+    <select class="filter-select" id="searchType">
+      <option value="all">All Fields</option>
+      <option value="item">Item Code</option>
+      <option value="cutting">Cutting No.</option>
+      <option value="shipment">Shipment/WS No.</option>
+      <option value="customer">Customer</option>
+    </select>
+    <button class="btn-primary" onclick="performSearch()" style="white-space:nowrap">Search</button>
+    <button class="btn-secondary" onclick="clearSearch()" style="white-space:nowrap">Clear</button>
+  </div>
+  <div class="selected-tags" id="selectedTags"></div>
+</div>
+<div class="search-result-panel" id="searchResultPanel">
+  <div class="result-header">🔍 Search Results for: <span id="searchQuery" style="font-style:italic"></span></div>
+  <div class="result-stats" id="resultStats"></div>
+  <div id="searchResultsTable"></div>
+</div>
+
+<!-- SUMMARY TAB -->
+<div class="tab-panel active" id="tab-summary">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">—</div><div class="stat-sub">auto-syncs hourly</div></div>
+    <!-- hidden stat holders so JS still works -->
+    <span id="totalItems" style="display:none">0</span>
+    <span id="totalReceived" style="display:none">0</span>
+    <span id="totalWithdrawn" style="display:none">0</span>
+    <span id="totalReturns" style="display:none">0</span>
+  </div>
+  <!-- Summary filter bar -->
+  <div class="form-card" style="padding:18px 20px;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:700;color:#607D8B;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">🔍 Filter Items</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input class="form-input" id="sumSearch" placeholder="Type item code or description to filter..." oninput="onSumSearchInput()" style="flex:1;min-width:260px;font-size:14px;padding:10px 14px" autocomplete="off">
+      <button class="btn-primary" onclick="showFilteredSummary()" style="padding:10px 22px;font-size:14px">🔍 Show</button>
+      <button class="btn-secondary" onclick="clearSumFilter()" style="padding:10px 16px;font-size:13px">Clear</button>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title">Stock Summary</div>
+    <span class="badge" id="summaryBadge">0 items</span>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table id="summaryTable">
+        <thead>
+          <tr>
+            <th>Item Code</th>
+            <th>Description</th>
+            <th>Size</th>
+            <th>Beginning</th>
+            <th>Received</th>
+            <th>Withdrawn</th>
+            <th>Returns</th>
+            <th>Ending Balance</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="summaryBody"><tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">Connect your Google Sheet to load inventory data</div></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- BEGINNING TAB -->
+<div class="tab-panel" id="tab-beginning">
+  <div class="section-header">
+    <div class="section-title">Beginning Inventory</div>
+    <span class="badge" id="beginningBadge">0 items</span>
+  </div>
+
+  <!-- Quick filter -->
+  <div class="form-card" style="padding:14px 18px">
+    <div style="font-size:12px;font-weight:700;color:#607D8B;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🔍 Filter Items</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input class="form-input" id="begSearch" placeholder="Type item code to filter..." oninput="onBegSearchInput()" style="flex:1;min-width:200px" autocomplete="off">
+      <button class="btn-primary" onclick="showFilteredBeginning()" style="padding:8px 18px;font-size:13px">🔍 Show</button>
+      <button class="btn-secondary" onclick="clearBegFilter()" style="padding:8px 14px;font-size:12px">Clear</button>
+    </div>
+    <div id="begSuggestBox" style="position:relative"></div>
+  </div>
+
+  <!-- Inline editable table -->
+  <div class="card">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;font-weight:600;color:#2E7D32;display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4CAF50"></span>
+        ✍ Auto-save is ON — your changes push to the DATA tab 1.5s after you stop typing
+      </div>
+      <button class="btn-secondary" onclick="saveAllBeginning()" style="padding:8px 18px;font-size:13px" title="Force an immediate bulk save of every row">💾 Force Save All</button>
+    </div>
+    <div class="table-wrap">
+      <table id="beginningTable">
+        <thead><tr><th>Item Code</th><th>Description</th><th>Size</th><th style="width:130px">Beginning Qty</th><th style="width:180px">Remarks</th></tr></thead>
+        <tbody id="beginningBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- WITHDRAWAL TAB -->
+<div class="tab-panel" id="tab-withdrawal">
+  <div class="section-header">
+    <div class="section-title">Withdrawal Records (from GSheet)</div>
+    <span class="badge" id="withdrawalBadge">0 records</span>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <input class="form-input" id="wFilter" placeholder="Filter by item, cutting no, customer, sales order no..." oninput="filterWithdrawal()" style="flex:1;min-width:180px">
+    <input type="date" class="form-input" id="wDateFrom" onchange="filterWithdrawal()" style="min-width:140px">
+    <input type="date" class="form-input" id="wDateTo" onchange="filterWithdrawal()" style="min-width:140px">
+    <button class="btn-secondary" onclick="clearWFilter()">Clear</button>
+    <button class="btn-secondary" id="loadFullHistoryBtn" onclick="loadFullWithdrawalHistory()" title="Fetch the full historical withdrawal CSV (slower) — only needed if you configured a recent-only URL">⏬ Load Full History</button>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Item Code</th><th>Description</th><th>Width</th><th>Length</th><th>Qty Withdrawn</th><th>Balance</th><th>Withdrawal No.</th><th>Sales Order No.</th><th>Customer</th><th>Shipment No.</th></tr></thead>
+        <tbody id="withdrawalBody"><tr><td colspan="11"><div class="empty-state"><div class="empty-icon">↗</div><div class="empty-text">Sync from Google Sheets to load withdrawal records</div></div></td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="wPagination" style="display:none">
+      <span class="page-info" id="wPageInfo"></span>
+      <div class="page-btns">
+        <button class="page-btn" id="wPrev" onclick="changePage(&#39;w&#39;,-1)">← Prev</button>
+        <span id="wPageNums" style="display:flex;gap:4px"></span>
+        <button class="page-btn" id="wNext" onclick="changePage(&#39;w&#39;,1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIVED TAB -->
+<div class="tab-panel" id="tab-received">
+  <div class="section-header">
+    <div class="section-title">Received Items (RIR)</div>
+    <span class="badge" id="receivedBadge">0 records</span>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <input class="form-input" id="rFilter" placeholder="Filter by item, MRR no., supplier..." oninput="filterReceived()" style="flex:1;min-width:180px">
+    <input type="date" class="form-input" id="rDateFrom" onchange="filterReceived()" style="min-width:140px">
+    <input type="date" class="form-input" id="rDateTo" onchange="filterReceived()" style="min-width:140px">
+    <button class="btn-secondary" onclick="clearRFilter()">Clear</button>
+  </div>
+  <div style="margin-bottom:12px">
+    <div class="form-card">
+      <div style="font-size:13px;font-weight:600;color:#607D8B;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Add Received Item (Manual Entry)</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Date *</label><input class="form-input" type="date" id="recDate"></div>
+        <div class="form-group"><label class="form-label">Item Code *</label><select class="form-input" id="recItem"><option value="">Select...</option></select></div>
+        <div class="form-group"><label class="form-label">Quantity *</label><input class="form-input" type="number" id="recQty" placeholder="0" min="0"></div>
+        <div class="form-group"><label class="form-label">Size</label><input class="form-input" type="text" id="recSize" placeholder="e.g. 42 X 1200M"></div>
+        <div class="form-group"><label class="form-label">MRR #</label><input class="form-input" type="text" id="recMRR" placeholder="MRR number"></div>
+        <div class="form-group"><label class="form-label">Supplier</label><input class="form-input" type="text" id="recSupplier" placeholder="Supplier name"></div>
+        <div class="form-group"><label class="form-label">Remarks</label><input class="form-input" type="text" id="recRemarks" placeholder="Optional notes"></div>
+      </div>
+      <div class="btn-row"><button class="btn-primary" onclick="saveReceived()">+ Add Received Record</button><button class="btn-secondary" onclick="clearRecForm()">Clear</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Item Code</th><th>Description</th><th>Size</th><th>Quantity</th><th>MRR #</th><th>Supplier</th><th>Remarks</th><th>Source</th><th style="width:120px">Actions</th></tr></thead>
+        <tbody id="receivedBody"><tr><td colspan="10"><div class="empty-state"><div class="empty-icon">↘</div><div class="empty-text">No received records yet</div></div></td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="rPagination" style="display:none">
+      <span class="page-info" id="rPageInfo"></span>
+      <div class="page-btns">
+        <button class="page-btn" id="rPrev" onclick="changePage(&#39;r&#39;,-1)">← Prev</button>
+        <span id="rPageNums" style="display:flex;gap:4px"></span>
+        <button class="page-btn" id="rNext" onclick="changePage(&#39;r&#39;,1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RETURN TAB -->
+<div class="tab-panel" id="tab-return">
+  <div class="section-header">
+    <div class="section-title">Return / Refund Records</div>
+    <span class="badge" id="returnBadge">0 records</span>
+  </div>
+  <div class="form-card">
+    <div style="font-size:13px;font-weight:600;color:#607D8B;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Add Return Record</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Date *</label><input class="form-input" type="date" id="retDate"></div>
+      <div class="form-group"><label class="form-label">Item Code *</label><select class="form-input" id="retItem"><option value="">Select...</option></select></div>
+      <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="retDesc" readonly="" placeholder="Auto-filled"></div>
+      <div class="form-group"><label class="form-label">Units</label><input class="form-input" id="retUnits" readonly="" placeholder="Auto-filled"></div>
+      <div class="form-group"><label class="form-label">Quantity *</label><input class="form-input" type="number" id="retQty" placeholder="0" min="0"></div>
+      <div class="form-group"><label class="form-label">Size</label><input class="form-input" type="text" id="retSize" placeholder="e.g. 21 X 500M"></div>
+      <div class="form-group"><label class="form-label">Customer</label><input class="form-input" type="text" id="retCustomer" placeholder="Customer name"></div>
+      <div class="form-group"><label class="form-label">Withdrawal No.</label><input class="form-input" type="text" id="retWhdlNo" placeholder="Reference withdrawal no."></div>
+      <div class="form-group"><label class="form-label">Remarks</label><input class="form-input" type="text" id="retRemarks" placeholder="Reason for return"></div>
+    </div>
+    <div class="btn-row"><button class="btn-primary" onclick="saveReturn()">+ Save Return</button><button class="btn-secondary" onclick="clearRetForm()">Clear</button></div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Item Code</th><th>Description</th><th>Units</th><th>Quantity</th><th>Size</th><th>Customer</th><th>Withdrawal No.</th><th>Remarks</th></tr></thead>
+        <tbody id="returnBody"><tr><td colspan="9"><div class="empty-state"><div class="empty-icon">↩</div><div class="empty-text">No return records yet</div></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH TAB -->
+<div class="tab-panel" id="tab-search">
+  <div class="stat-grid" id="searchDetailStats" style="display:none"></div>
+  <div id="searchDetailContent">
+    <div class="empty-state" style="padding:60px 20px;background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border)">
+      <div class="empty-icon" style="font-size:50px">🔍</div>
+      <div class="empty-text" style="font-size:15px;margin-top:8px">Use the search bar above to find items</div>
+      <div style="font-size:13px;color:#90A4AE;margin-top:6px">Search by item code, description, cutting no., or shipment no.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- ITEM PICKER — rendered as fixed overlay so it is never clipped by a parent -->
+<div class="item-picker" id="itemPicker">
+  <div class="item-picker-header">
+    <span id="pickerTitle">Select items to search</span>
+    <div class="picker-actions">
+      <button class="picker-btn" onmousedown="event.preventDefault()" onclick="pickerSelectAll()">All</button>
+      <button class="picker-btn" onmousedown="event.preventDefault()" onclick="pickerClearAll()">None</button>
+      <button class="picker-btn go" onmousedown="event.preventDefault()" onclick="pickerSearch()">🔍 Search</button>
+    </div>
+  </div>
+  <div class="item-picker-list" id="pickerList"></div>
+</div>
+
+<script>
+var ITEMCODE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTljhkOp-580AkSuRHN3f298NT9rZSXRTRbkF-BUaZatK7_hXHzqt-xTtoqX8k9RgGv2fF7lIhT7l_R/pub?gid=72250405&single=true&output=csv';
+
+// ── Item code allowlist for this coworker's view ──
+// These codes correspond to the following item descriptions in the Sales Order sheet (column S):
+//   PP GLOSS A4 Size        → A4_BPBB
+//   PP MATTE A4 Size        → A4_BPYB
+//   Bookpaper YB A4 Size    → A4_HGYB  (was A4_BPYB — updated)
+//   Hi-Gloss YB A4 Size     → A4_HGYB
+//   Book Paper WB Kraft 24x36 → HGWB_24X36
+//   Book Paper YB Kraft 24x36 → HGYB_24X36
+//   High Gloss WB 24 X 36   → HGWB_24X36
+//   High Gloss YB 24 X 36   → HGYB_24X36
+//   SP-WB 24 X 36 Kraft     → SPWB_24X36
+//   Satin Paper YB 24 X 36  → SPYB_24X36
+//   Satin Paper YB 36 X 24  → SPYB_36X24
+var ALLOWED_CODES = ['A4_BPBB','A4_BPYB','A4_HGYB','BPYB_24X36','HGWB_24X36','HGYB_24X36','SPWB_24X36','SPYB_24X36','BPYB_36X24','HGYB_36X24','SPYB_36X24'];
+
+// ── Description → Item Code lookup (used when GSheet provides descriptions instead of codes) ──
+// Keys are lowercased & trimmed for robust matching against column S of the Sales Order tab.
+var DESC_TO_CODE = {
+  'pp gloss a4 size':               'A4_BPBB',
+  'pp matte a4 size':               'A4_BPYB',
+  'bookpaper yb a4 size':           'A4_HGYB',
+  'book paper yb a4 size':          'A4_HGYB',
+  'hi-gloss yb a4 size':            'A4_HGYB',
+  'hi gloss yb a4 size':            'A4_HGYB',
+  'book paper wb kraft 24 x 36':    'HGWB_24X36',
+  'book paper wb kraft 24x36':      'HGWB_24X36',
+  'high gloss wb 24 x 36':          'HGWB_24X36',
+  'high gloss wb 24x36':            'HGWB_24X36',
+  'book paper yb kraft 24 x 36':    'HGYB_24X36',
+  'book paper yb kraft 24x36':      'HGYB_24X36',
+  'high gloss yb 24 x 36':          'HGYB_24X36',
+  'high gloss yb 24x36':            'HGYB_24X36',
+  'sp-wb 24 x 36 kraft':            'SPWB_24X36',
+  'sp-wb 24x36 kraft':              'SPWB_24X36',
+  'sp wb 24 x 36 kraft':            'SPWB_24X36',
+  'satin paper yb 24 x 36':         'SPYB_24X36',
+  'satin paper yb 24x36':           'SPYB_24X36',
+  'satin paper yb 36 x 24':         'SPYB_36X24',
+  'satin paper yb 36x24':           'SPYB_36X24'
+};
+
+// ── PIN protection for Beginning and Received tabs ──
+// Change PIN_CODE below to your desired 4-digit PIN.
+var PIN_CODE = '1234';
+var _pinUnlocked = false;
+var _pinTargetTab = null;
+var _pinInput = '';
+
+var STATE = {
+  items: [],
+  beginning: {},
+  withdrawal: [],
+  withdrawalFiltered: [],
+  received: [],
+  receivedFiltered: [],
+  returns: [],
+  config: {proxyUrl:'',withdrawalUrl:'',withdrawalRecentUrl:'',receivedUrl:'',returnUrl:'',dataUrl:''},
+  lastSync: null,
+  wPage: 1,
+  rPage: 1,
+  pageSize: 50,
+  activeTab: 'summary'
+};
+
+function loadState() {
+  try {
+    var s = localStorage.getItem('ymcc_state');
+    if (s) {
+      var parsed = JSON.parse(s);
+      STATE.items = parsed.items || [];
+      STATE.beginning = parsed.beginning || {};
+      STATE.received = parsed.received || [];
+      STATE.returns = parsed.returns || [];
+      STATE.config = parsed.config || {withdrawalUrl:'',withdrawalRecentUrl:'',receivedUrl:'',returnUrl:'',dataUrl:''};
+      if (!STATE.config.dataUrl) STATE.config.dataUrl = '';
+      if (!STATE.config.withdrawalRecentUrl) STATE.config.withdrawalRecentUrl = '';
+      STATE.lastSync = parsed.lastSync || null;
+      STATE.withdrawal = parsed.withdrawal || [];
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('ymcc_state', JSON.stringify({
+      items: STATE.items,
+      beginning: STATE.beginning,
+      received: STATE.received,
+      returns: STATE.returns,
+      config: STATE.config,
+      lastSync: STATE.lastSync,
+      withdrawal: STATE.withdrawal
+    }));
+  } catch(e) {}
+}
+
+function init() {
+  loadState();
+  // Hard-coded current URLs (overwrite any stale localStorage values so every
+  // browser — yours or coworker's — picks up the latest deployment automatically).
+  // ── IMPORTANT: Replace this with your own Apps Script Web App URL after deploying Code.gs ──
+  STATE.config.proxyUrl = STATE.config.proxyUrl || ''; // Set via Settings panel or deploy Code.gs and paste URL here
+  STATE.config.withdrawalUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTljhkOp-580AkSuRHN3f298NT9rZSXRTRbkF-BUaZatK7_hXHzqt-xTtoqX8k9RgGv2fF7lIhT7l_R/pub?gid=1482845223&single=true&output=csv';
+  STATE.config.dataUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTljhkOp-580AkSuRHN3f298NT9rZSXRTRbkF-BUaZatK7_hXHzqt-xTtoqX8k9RgGv2fF7lIhT7l_R/pub?gid=1228661657&single=true&output=csv';
+  saveState();
+  if (document.getElementById('proxyUrl')) document.getElementById('proxyUrl').value = STATE.config.proxyUrl;
+  if (document.getElementById('gsheetWithdrawal')) document.getElementById('gsheetWithdrawal').value = STATE.config.withdrawalUrl;
+  if (document.getElementById('gsheetWithdrawalRecent')) document.getElementById('gsheetWithdrawalRecent').value = STATE.config.withdrawalRecentUrl || '';
+  if (document.getElementById('gsheetReceived')) document.getElementById('gsheetReceived').value = STATE.config.receivedUrl || '';
+  if (document.getElementById('gsheetReturn')) document.getElementById('gsheetReturn').value = STATE.config.returnUrl || '';
+  if (document.getElementById('gsheetData')) document.getElementById('gsheetData').value = STATE.config.dataUrl || '';
+
+  if (STATE.lastSync) {
+    document.getElementById('lastSync').textContent = formatDate(STATE.lastSync);
+  }
+
+  if (STATE.config.withdrawalUrl) {
+    document.getElementById('setupPanel').style.display = 'none';
+  }
+
+  // === Stale-While-Revalidate boot (Web14.6) ===
+  // 1. Show whatever we have in cache INSTANTLY — no waiting on any network.
+  populateItemSelects();
+  renderAll();
+
+  // 2. Decide whether we need to refresh.
+  //    - If we have no cached withdrawals yet, sync immediately (visible).
+  //    - If cache is fresh (<5 min), don't refresh on boot — auto-sync handles it.
+  //    - Otherwise refresh silently in the background.
+  var hasCache = (STATE.withdrawal && STATE.withdrawal.length > 0);
+  var lastSyncMs = STATE.lastSync ? new Date(STATE.lastSync).getTime() : 0;
+  var ageMs = lastSyncMs ? (Date.now() - lastSyncMs) : Infinity;
+
+  if (STATE.config.withdrawalUrl) {
+    if (!hasCache) {
+      setTimeout(function(){ syncNow(); }, 50);
+    } else if (ageMs > 300000) {
+      setTimeout(function(){ syncNow({silent: true}); }, 200);
+    } else {
+      loadItemCodeSheet(function(){ populateItemSelects(); });
+    }
+  } else {
+    loadItemCodeSheet(function() {
+      populateItemSelects();
+      renderAll();
+    });
+  }
+
+  startAutoSync();
+}
+
+function getDefaultItems() {
+  return [
+    {code:'DIRECT-THML FH',desc:'Direct Thermal FH 70gsm Blue Glassine Hotmelt',unit:'42 X 1200M'},
+    {code:'LUMP-YEL',desc:'Luminous Paper Yellow',unit:'42 X 500M'},
+    {code:'PP-60 FH',desc:'PP White Sticker #60 FH WATERBASE',unit:'42 X 1200M'},
+    {code:'SPWB-RUB-BASE',desc:'Satin Paper WB Kraft Rubberbase',unit:'42 X 500M'},
+    {code:'SPBB-165 HOTMELT FH',desc:'Satin Paper BB Glsn #165 MD FH',unit:'42 X 1200M'},
+    {code:'SPYB',desc:'Satin Paper YB',unit:'42 X 500M'},
+    {code:'SPYB-24X36',desc:'Satin Paper YB 24 X 36',unit:'24 X36'},
+    {code:'SR-57',desc:'SR 1-1/2 X 400m',unit:'ROLL'},
+    {code:'ACP3-15',desc:'ACP 3mm 0.15',unit:'PC'},
+    {code:'ACP4-15',desc:'ACP 4mm 0.15',unit:'PC'},
+    {code:'ACP4-20',desc:'ACP 4mm 0.20',unit:'PC'},
+    {code:'APPTAPE',desc:'Application Tape',unit:'48 X 100M'},
+    {code:'BPBB .297 X.210',desc:'BPBB A4 297 X 210',unit:'.297 X .210'},
+    {code:'SINTRA-1.5MM NEW',desc:'Sintra Board 1.5MM',unit:'PC'},
+    {code:'VOIDWHT',desc:'Void White',unit:'21 X 500M'}
+  ];
+}
+
+function loadItemCodeSheet(callback) {
+  // Use the shared robust fetchCSV function
+  fetchCSV(ITEMCODE_CSV_URL, function(text) {
+    var parsed = parseItemCodeCSV(text);
+    if (parsed.length) {
+      STATE.items = parsed;
+      STATE.itemCodeData = parsed;
+      saveState();
+    } else {
+      if (!STATE.items.length) STATE.items = getDefaultItems();
+      saveState();
+    }
+    if (callback) callback();
+  }, function() {
+    // All proxies failed — fall back to defaults
+    if (!STATE.items.length) STATE.items = getDefaultItems();
+    saveState();
+    if (callback) callback();
+  });
+}
+
+function parseItemCodeCSV(csvText) {
+  var lines = csvText.split('\n');
+  if (lines.length < 2) return [];
+  // Detect columns from header
+  var header = parseCSVLine(lines[0]);
+  var codeIdx = -1, descIdx = -1, sizeIdx = -1;
+  // Indices for split size columns: widthVal(D=3), widthUnit(E=4), lengthVal(F=5), lengthUnit(G=6)
+  var widthValIdx = -1, widthUnitIdx = -1, lengthValIdx = -1, lengthUnitIdx = -1;
+  header.forEach(function(h, i) {
+    var hl = h.trim().toLowerCase();
+    if (hl === 'item code' || hl === 'itemcode' || hl === 'code') codeIdx = i;
+    if (hl === 'item description' || hl === 'description' || hl === 'desc' || hl === 'item desc') descIdx = i;
+    if (hl === 'size' || hl === 'unit' || hl === 'units') sizeIdx = i;
+    if (hl === 'width') widthValIdx = i;
+    if (hl === 'width unit' || hl === 'wunit') widthUnitIdx = i;
+    if (hl === 'length') lengthValIdx = i;
+    if (hl === 'length unit' || hl === 'lunit') lengthUnitIdx = i;
+  });
+  // Fallback: assume first=code, second=desc, then check for 4-cell size pattern (D=3,E=4,F=5,G=6)
+  if (codeIdx === -1) codeIdx = 0;
+  if (descIdx === -1) descIdx = 1;
+  // If no explicit width/length headers found, assume columns D-G (indices 3-6) are the 4 size cells
+  var hasSplitSize = (widthValIdx !== -1 && lengthValIdx !== -1);
+  if (!hasSplitSize && header.length >= 7) {
+    // Auto-detect: try indices 3,4,5,6 as width_val, width_unit, length_val, length_unit
+    widthValIdx = 3; widthUnitIdx = 4; lengthValIdx = 5; lengthUnitIdx = 6;
+    hasSplitSize = true;
+  }
+  if (!hasSplitSize && sizeIdx === -1) sizeIdx = 2;
+  var results = [];
+  for (var i = 1; i < lines.length; i++) {
+    var l = lines[i].trim();
+    if (!l) continue;
+    var cols = parseCSVLine(l);
+    var code = (cols[codeIdx]||'').trim();
+    var desc = (cols[descIdx]||'').trim();
+    var size = '';
+    if (hasSplitSize) {
+      var wVal = (cols[widthValIdx]||'').trim();
+      var wUnit = (cols[widthUnitIdx]||'').trim();
+      var lVal = (cols[lengthValIdx]||'').trim();
+      var lUnit = (cols[lengthUnitIdx]||'').trim();
+      if (wVal || lVal) {
+        var wPart = wVal + (wUnit ? wUnit : '');
+        var lPart = lVal + (lUnit ? lUnit : '');
+        if (wPart && lPart) size = wPart + ' x ' + lPart;
+        else size = wPart || lPart;
+      } else if (sizeIdx !== -1) {
+        size = (cols[sizeIdx]||'').trim();
+      }
+    } else {
+      size = sizeIdx >= 0 ? (cols[sizeIdx]||'').trim() : '';
+    }
+    if (!code) continue;
+    results.push({code: code, desc: desc, unit: size, size: size});
+  }
+  return results;
+}
+
+function populateItemSelects() {
+  var selects = ['recItem','retItem'];
+  selects.forEach(function(id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">Select item...</option>';
+    STATE.items.forEach(function(item) {
+      var opt = document.createElement('option');
+      opt.value = item.code;
+      opt.textContent = item.code + ' — ' + item.desc;
+      sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  });
+
+
+  var retSel = document.getElementById('retItem');
+  if (retSel) retSel.onchange = function() { fillItemDetails(this.value, 'ret'); };
+}
+
+function fillItemDetails(code, prefix) {
+  var item = STATE.items.find(function(i){ return i.code === code; });
+  if (!item) return;
+  var descEl = document.getElementById(prefix+'Description') || document.getElementById(prefix+'Desc');
+  var unitEl = document.getElementById(prefix+'Units');
+  if (descEl) descEl.value = item.desc;
+  if (unitEl) unitEl.value = item.unit;
+}
+
+function switchTab(tab) {
+  // PIN-protected tabs: show PIN modal if not yet unlocked this session
+  var PIN_PROTECTED = ['beginning','received'];
+  if (PIN_PROTECTED.indexOf(tab) !== -1 && !_pinUnlocked) {
+    _pinTargetTab = tab;
+    _pinInput = '';
+    _updatePinDots();
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('pinOverlay').classList.add('show');
+    return;
+  }
+  _doSwitchTab(tab);
+}
+
+function _doSwitchTab(tab) {
+  // Always close the item picker and clear its state when switching tabs
+  var picker = document.getElementById('itemPicker');
+  if (picker) picker.style.display = 'none';
+  if (typeof pickerMatches !== 'undefined') pickerMatches = [];
+  if (typeof pickerSelected !== 'undefined') pickerSelected = {};
+  if (typeof activeSearchCodes !== 'undefined') activeSearchCodes = [];
+  var tagsEl = document.getElementById('selectedTags');
+  if (tagsEl) tagsEl.innerHTML = '';
+  var gSearch = document.getElementById('globalSearch');
+  if (gSearch) gSearch.value = '';
+  var srEl = document.getElementById('searchResultPanel');
+  if (srEl) srEl.style.display = 'none';
+
+  STATE.activeTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('tab-'+tab).classList.add('active');
+  var tabs = ['summary','beginning','withdrawal','received','return','search'];
+  var idx = tabs.indexOf(tab);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+}
+
+function renderAll() {
+  renderSummary();
+  renderBeginning();
+  renderWithdrawal();
+  renderReceived();
+  renderReturn();
+  updateCounts();
+}
+
+function renderSummary() {
+  var body = document.getElementById('summaryBody');
+  if (!STATE.items.length) { body.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">&#128230;</div><div class="empty-text">No items found</div></div></td></tr>'; return; }
+
+  // Restrict to allowed item codes only
+  var baseItems = STATE.items.filter(function(item) { return ALLOWED_CODES.indexOf(item.code) !== -1; });
+
+  // Apply summary filter on top of the allowlist
+  var q = (document.getElementById('sumSearch') ? document.getElementById('sumSearch').value : '').toLowerCase().trim();
+  var items;
+  if (sumFilterActive && sumFilteredCodes !== null) {
+    items = baseItems.filter(function(item) { return sumFilteredCodes.indexOf(item.code) !== -1; });
+  } else if (q) {
+    items = baseItems.filter(function(item) {
+      return item.code.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+    });
+  } else {
+    items = baseItems;
+  }
+
+  var html = '';
+  items.forEach(function(item) {
+    var beg = (STATE.beginning[item.code] && STATE.beginning[item.code].qty) ? parseFloat(STATE.beginning[item.code].qty) : 0;
+    var rec = STATE.received.filter(function(r){ return r.itemCode === item.code; }).reduce(function(a,r){ return a + (parseFloat(r.qty)||0); }, 0);
+    var wth = STATE.withdrawal.filter(function(w){ return w.itemCode === item.code; }).reduce(function(a,w){ return a + (parseFloat(w.qty)||0); }, 0);
+    var ret = STATE.returns.filter(function(r){ return r.itemCode === item.code; }).reduce(function(a,r){ return a + (parseFloat(r.qty)||0); }, 0);
+    var ending = beg + rec - wth + ret;
+    var status = ending <= 0 ? '<span class="pill pill-red">Out of Stock</span>' : ending < 5 ? '<span class="pill pill-amber">Low Stock</span>' : '<span class="pill pill-green">In Stock</span>';
+    html += '<tr><td class="td-code">'+item.code+'</td><td>'+item.desc+'</td><td><span class="pill pill-gray">'+item.unit+'</span></td><td>'+beg+'</td><td style="color:#2E7D32;font-weight:600">'+rec+'</td><td style="color:#C62828;font-weight:600">'+wth+'</td><td style="color:#00695C;font-weight:600">'+ret+'</td><td style="font-weight:700;font-size:15px">'+ending+'</td><td>'+status+'</td></tr>';
+  });
+  if (!html) html = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">&#128269;</div><div class="empty-text">No items match your filter</div></div></td></tr>';
+  body.innerHTML = html;
+  document.getElementById('summaryBadge').textContent = items.length + (items.length !== STATE.items.length ? ' of ' + STATE.items.length : '') + ' items';
+
+  var totalW = STATE.withdrawal.reduce(function(a,w){ return a+(parseFloat(w.qty)||0); }, 0);
+  var totalR = STATE.received.reduce(function(a,r){ return a+(parseFloat(r.qty)||0); }, 0);
+  var totalRet = STATE.returns.reduce(function(a,r){ return a+(parseFloat(r.qty)||0); }, 0);
+  document.getElementById('totalItems').textContent = STATE.items.length;
+  document.getElementById('totalReceived').textContent = totalR;
+  document.getElementById('totalWithdrawn').textContent = totalW;
+  document.getElementById('totalReturns').textContent = totalRet;
+  if (STATE.lastSync) document.getElementById('lastSync').textContent = formatDate(STATE.lastSync);
+}
+
+function filterBegGroup(prefix) {
+  document.getElementById('begSearch').value = prefix;
+  renderBeginning();
+}
+
+// ---- Summary Tab Filter ----
+var sumFilterActive = false;
+var sumFilteredCodes = null;
+
+function onSumSearchInput() {
+  sumFilterActive = false;
+  sumFilteredCodes = null;
+  renderSummary();
+}
+
+function showFilteredSummary() {
+  var q = (document.getElementById('sumSearch').value || '').trim().toLowerCase();
+  if (!q) {
+    sumFilterActive = false;
+    sumFilteredCodes = null;
+    renderSummary();
+    return;
+  }
+  var matched = STATE.items.filter(function(item) {
+    return item.code.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+  });
+  sumFilteredCodes = matched.map(function(i){ return i.code; });
+  sumFilterActive = true;
+  renderSummary();
+}
+
+function clearSumFilter() {
+  document.getElementById('sumSearch').value = '';
+  sumFilterActive = false;
+  sumFilteredCodes = null;
+  renderSummary();
+}
+
+var begFilterActive = false; // tracks if "Show" button was used
+var begFilteredCodes = null; // null = show all, array = filtered codes
+
+function onBegSearchInput() {
+  // Reset filter-active state when user types — they need to click Show again
+  begFilterActive = false;
+  begFilteredCodes = null;
+  renderBeginning();
+}
+
+function showFilteredBeginning() {
+  var q = (document.getElementById('begSearch').value || '').trim().toLowerCase();
+  if (!q) {
+    begFilterActive = false;
+    begFilteredCodes = null;
+    renderBeginning();
+    return;
+  }
+  var matched = STATE.items.filter(function(item) {
+    return item.code.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+  });
+  begFilteredCodes = matched.map(function(i){ return i.code; });
+  begFilterActive = true;
+  renderBeginning();
+}
+
+function clearBegFilter() {
+  document.getElementById('begSearch').value = '';
+  begFilterActive = false;
+  begFilteredCodes = null;
+  renderBeginning();
+}
+
+function renderBeginning() {
+  var body = document.getElementById('beginningBody');
+  var q = (document.getElementById('begSearch') ? document.getElementById('begSearch').value : '').toLowerCase().trim();
+  var items;
+  if (begFilterActive && begFilteredCodes !== null) {
+    items = STATE.items.filter(function(item) { return begFilteredCodes.indexOf(item.code) !== -1; });
+  } else if (q) {
+    items = STATE.items.filter(function(item) {
+      return item.code.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+    });
+  } else {
+    items = STATE.items;
+  }
+  var html = '';
+  items.forEach(function(item) {
+    var b = STATE.beginning[item.code] || {qty:0, remarks:''};
+    var qty = (b.qty !== undefined && b.qty !== null) ? b.qty : 0;
+    var remarks = b.remarks || '';
+    var size = item.size || item.unit || '';
+    var safeId = item.code.replace(/[^a-zA-Z0-9_-]/g,'_');
+    html += '<tr>'
+      +'<td class="td-code">'+item.code+' <span class="beg-save-dot" id="begdot-'+safeId+'" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:4px;vertical-align:middle"></span></td>'
+      +'<td style="color:#455A64">'+item.desc+'</td>'
+      +'<td><span class="pill pill-gray">'+size+'</span></td>'
+      +'<td><input type="number" class="form-input beg-qty-input" data-code="'+item.code+'" value="'+qty+'" min="0" style="padding:6px 10px;font-size:13px;font-weight:700;width:110px;text-align:center" placeholder="0" oninput="onBegQtyChange(this)"></td>'
+      +'<td><input type="text" class="form-input beg-rem-input" data-code="'+item.code+'" value="'+remarks+'" style="padding:6px 10px;font-size:12px;width:100%" placeholder="optional notes" oninput="onBegRemarksChange(this)"></td>'
+      +'</tr>';
+  });
+  if (!html) html = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">&#128269;</div><div class="empty-text">No items match your search</div></div></td></tr>';
+  body.innerHTML = html;
+  var setCount = Object.keys(STATE.beginning).filter(function(k){ return STATE.beginning[k] && STATE.beginning[k].qty > 0; }).length;
+  document.getElementById('beginningBadge').textContent = setCount + ' items with beginning stock';
+}
+
+function saveAllBeginning() {
+  var qtyInputs = document.querySelectorAll('.beg-qty-input');
+  var saved = 0;
+  var items = [];
+  qtyInputs.forEach(function(input) {
+    var code = input.getAttribute('data-code');
+    var qty = parseFloat(input.value) || 0;
+    var remEl = document.querySelector('.beg-rem-input[data-code="'+code+'"]');
+    var remarks = remEl ? remEl.value : '';
+    var item = STATE.items.find(function(i){ return i.code === code; }) || {};
+    STATE.beginning[code] = {qty: qty, remarks: remarks, desc: item.desc, unit: item.unit};
+    items.push({code: code, qty: qty, remarks: remarks, desc: item.desc||'', unit: item.unit||''});
+    saved++;
+  });
+  saveState();
+  renderSummary();
+  renderBeginning();
+
+  // Push to DATA tab so coworkers see same numbers
+  if (STATE.config.proxyUrl) {
+    postToScript({action:'save_beginning_bulk', items: items}, function(){
+      showToast('Saved ' + saved + ' beginning rows locally + DATA tab.', 'success');
+    }, function(err){
+      showToast('Saved locally, but DATA tab sync failed: '+err, 'error');
+    });
+  } else {
+    showToast('Saved beginning stock for ' + saved + ' items (local only — configure Apps Script to share).', 'success');
+  }
+}
+
+// Live-update summary when beginning qty changes + auto-save to DATA tab (debounced)
+function onBegQtyChange(input) {
+  var code = input.getAttribute('data-code');
+  var qty = parseFloat(input.value) || 0;
+  var item = STATE.items.find(function(i){ return i.code === code; }) || {};
+  var existing = STATE.beginning[code] || {};
+  STATE.beginning[code] = {qty: qty, remarks: existing.remarks || '', desc: item.desc, unit: item.unit};
+  renderSummary();
+  scheduleBegAutoSave(code);
+}
+
+function onBegRemarksChange(input) {
+  var code = input.getAttribute('data-code');
+  var remarks = input.value;
+  var item = STATE.items.find(function(i){ return i.code === code; }) || {};
+  var existing = STATE.beginning[code] || {};
+  STATE.beginning[code] = {qty: existing.qty || 0, remarks: remarks, desc: item.desc, unit: item.unit};
+  scheduleBegAutoSave(code);
+}
+
+// Debounced per-row auto-save: waits 1.5s after last input, then POSTs one row.
+// Keeps Apps Script request count sane (typing "1234" = 1 save, not 4).
+var begAutoSaveTimers = {};
+function scheduleBegAutoSave(code) {
+  saveState(); // always persist to localStorage immediately
+  if (!STATE.config.proxyUrl) { setBegDot(code, 'local'); return; }
+  setBegDot(code, 'pending');
+  if (begAutoSaveTimers[code]) clearTimeout(begAutoSaveTimers[code]);
+  begAutoSaveTimers[code] = setTimeout(function() {
+    var b = STATE.beginning[code] || {};
+    postToScript(
+      {action:'save_beginning_single', item: {code: code, qty: b.qty||0, remarks: b.remarks||'', desc: b.desc||'', unit: b.unit||''}},
+      function(){ setBegDot(code, 'ok'); },
+      function(err){ setBegDot(code, 'err'); console.warn('Auto-save failed for '+code+': '+err); showToast('Save failed for '+code+': '+err, 'error'); }
+    );
+  }, 1500);
+}
+
+function setBegDot(code, state) {
+  var safeId = code.replace(/[^a-zA-Z0-9_-]/g,'_');
+  var dot = document.getElementById('begdot-' + safeId);
+  if (!dot) return;
+  dot.title = {pending:'Saving...', ok:'Saved to DATA tab', err:'Save failed', local:'Saved locally only'}[state] || '';
+  dot.style.background = {pending:'#FFC107', ok:'#4CAF50', err:'#F44336', local:'#90A4AE'}[state] || 'transparent';
+  if (state === 'ok') {
+    setTimeout(function(){
+      if (dot && dot.style.background === 'rgb(76, 175, 80)') dot.style.background = 'transparent';
+    }, 2000);
+  }
+}
+
+
+function renderWithdrawal() {
+  var rawSource = (STATE.withdrawalFiltered.length || document.getElementById('wFilter').value || document.getElementById('wDateFrom').value) ? STATE.withdrawalFiltered : STATE.withdrawal;
+  // Restrict to allowed item codes only
+  var source = rawSource.filter(function(w) { return ALLOWED_CODES.indexOf(w.itemCode) !== -1; });
+  var total = source.length;
+  var body = document.getElementById('withdrawalBody');
+  if (!total) {
+    body.innerHTML = '<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">&#8599;</div><div class="empty-text">No withdrawal records found. Click Sync Now to load from GSheet.</div></div></td></tr>';
+    document.getElementById('wPagination').style.display='none';
+    document.getElementById('withdrawalBadge').textContent = '0 records';
+    return;
+  }
+  // Clamp page
+  var pages = Math.ceil(total / STATE.pageSize);
+  if (STATE.wPage < 1) STATE.wPage = 1;
+  if (STATE.wPage > pages) STATE.wPage = pages;
+  var start = (STATE.wPage - 1) * STATE.pageSize;
+  var display = source.slice(start, start + STATE.pageSize);
+  // Running balance is computed across ALL withdrawals (not just the current page)
+  // so rows on page 2 still reflect everything on page 1.
+  computeWithdrawalBalances();
+  var html = '';
+  display.forEach(function(w) {
+    var item = STATE.items.find(function(it){ return it.code === w.itemCode; }) || {};
+    var desc = w.desc || item.desc || '—';
+    var bal = (typeof w._balance === 'number') ? w._balance : null;
+    var balColor = bal === null ? '#90A4AE' : (bal < 0 ? '#C62828' : (bal === 0 ? '#EF6C00' : '#2E7D32'));
+    var balText = bal === null ? '—' : bal;
+    html += '<tr>'
+      +'<td style="white-space:nowrap">'+(w.date||'—')+'</td>'
+      +'<td class="td-code">'+(w.itemCode||'—')+'</td>'
+      +'<td style="color:#455A64">'+desc+'</td>'
+      +'<td style="color:#546E7A">'+(w.width||'—')+'</td>'
+      +'<td style="color:#546E7A">'+(w.length||'—')+'</td>'
+      +'<td style="font-weight:700;color:#C62828">'+(w.qty||0)+'</td>'
+      +'<td style="font-weight:700;color:'+balColor+'">'+balText+'</td>'
+      +'<td><span class="pill pill-blue">'+(w.withdrawalNo||'—')+'</span></td>'
+      +'<td><span class="pill pill-blue">'+(w.salesOrderNo||'—')+'</span></td>'
+      +'<td>'+(w.customer||'—')+'</td>'
+      +'<td><span class="pill pill-blue">'+(w.shipmentNo||'—')+'</span></td>'
+      +'</tr>';
+  });
+  body.innerHTML = html;
+  document.getElementById('withdrawalBadge').textContent = 'Showing '+(start+1)+'-'+Math.min(start+STATE.pageSize,total)+' of '+total+' records';
+  renderPagination('w', total);
+}
+
+// Walks every item's transaction history in chronological order and stores
+// the remaining stock after each withdrawal on the withdrawal record itself
+// (w._balance). Formula: Beginning + Σ(Received ≤ date) − Σ(Withdrawn ≤ this)
+//                        + Σ(Returns ≤ date).
+// On ties (same date), Received and Returns are applied BEFORE Withdrawals.
+function computeWithdrawalBalances() {
+  if (!STATE.withdrawal || !STATE.withdrawal.length) return;
+
+  function dkey(s) {
+    if (!s || s === '—') return Number.POSITIVE_INFINITY; // missing dates go last
+    var t = Date.parse(s);
+    return isNaN(t) ? Number.POSITIVE_INFINITY : t;
+  }
+
+  // Build per-item event lists
+  var byItem = {};
+  function bucket(code) {
+    if (!byItem[code]) byItem[code] = [];
+    return byItem[code];
+  }
+
+  // Beginning is the anchor point, before any dated event
+  Object.keys(STATE.beginning || {}).forEach(function(code) {
+    bucket(code).push({ts: -Infinity, prio: 0, type: 'beginning',
+                       qty: parseFloat((STATE.beginning[code]||{}).qty)||0});
+  });
+  (STATE.received || []).forEach(function(r) {
+    if (!r.itemCode) return;
+    bucket(r.itemCode).push({ts: dkey(r.date), prio: 1, type: 'received',
+                             qty: parseFloat(r.qty)||0});
+  });
+  (STATE.returns || []).forEach(function(r) {
+    if (!r.itemCode) return;
+    bucket(r.itemCode).push({ts: dkey(r.date), prio: 2, type: 'return',
+                             qty: parseFloat(r.qty)||0});
+  });
+  // Withdrawals — keep a reference so we can write the running balance back
+  STATE.withdrawal.forEach(function(w, idx) {
+    if (!w.itemCode) { w._balance = null; return; }
+    bucket(w.itemCode).push({ts: dkey(w.date), prio: 3, type: 'withdrawal',
+                             qty: parseFloat(w.qty)||0, ref: w, order: idx});
+  });
+
+  Object.keys(byItem).forEach(function(code) {
+    var events = byItem[code];
+    events.sort(function(a, b) {
+      if (a.ts !== b.ts) return a.ts - b.ts;
+      if (a.prio !== b.prio) return a.prio - b.prio;
+      return (a.order||0) - (b.order||0);
+    });
+    var bal = 0;
+    events.forEach(function(e) {
+      if (e.type === 'beginning')      bal  = e.qty;
+      else if (e.type === 'received')  bal += e.qty;
+      else if (e.type === 'return')    bal += e.qty;
+      else if (e.type === 'withdrawal') {
+        bal -= e.qty;
+        if (e.ref) e.ref._balance = bal;
+      }
+    });
+  });
+}
+
+
+function renderReceived() {
+  var filtered = STATE.receivedFiltered.length || document.getElementById('rFilter').value || document.getElementById('rDateFrom').value ? STATE.receivedFiltered : STATE.received;
+  var total = filtered.length;
+  var start = (STATE.rPage-1)*STATE.pageSize;
+  var pageData = filtered.slice(start, start+STATE.pageSize);
+  var body = document.getElementById('receivedBody');
+  if (!total) { body.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">&#8600;</div><div class="empty-text">No received records</div></div></td></tr>'; document.getElementById('rPagination').style.display='none'; return; }
+  var html = '';
+  pageData.forEach(function(r) {
+    var item = STATE.items.find(function(i){ return i.code === r.itemCode; }) || {};
+    var srcLabel = r.source==='gsheet' ? 'GSheet'
+                  : r.source==='backend' ? 'Shared'
+                  : 'Manual';
+    var srcClass = r.source==='gsheet' ? 'pill-blue'
+                  : r.source==='backend' ? 'pill-blue'
+                  : 'pill-gray';
+    var canEdit = r.source !== 'gsheet'; // legacy gsheet CSV rows aren't editable from webapp
+    var actionsHtml = canEdit
+      ? ('<button class="btn-secondary" style="padding:4px 10px;font-size:11px;margin-right:4px" onclick="editReceived(\''+r.id+'\')">✎ Edit</button>'
+        +'<button class="btn-secondary" style="padding:4px 10px;font-size:11px;background:#FFEBEE;color:#C62828;border-color:#FFCDD2" onclick="deleteReceived(\''+r.id+'\')">🗑 Delete</button>')
+      : '<span style="color:#90A4AE;font-size:11px">read-only</span>';
+    html += '<tr><td>'+(r.date||'—')+'</td><td class="td-code">'+(r.itemCode||'—')+'</td><td>'+(r.desc||item.desc||'—')+'</td><td><span class="pill pill-gray">'+(r.size||'—')+'</span></td><td style="font-weight:600;color:#2E7D32">'+(r.qty||0)+'</td><td>'+(r.mrrNo||'—')+'</td><td>'+(r.supplier||'—')+'</td><td>'+(r.remarks||'—')+'</td><td><span class="pill '+srcClass+'">'+srcLabel+'</span></td><td style="white-space:nowrap">'+actionsHtml+'</td></tr>';
+  });
+  body.innerHTML = html;
+  document.getElementById('receivedBadge').textContent = total + ' records';
+  renderPagination('r', total);
+}
+
+function renderReturn() {
+  var body = document.getElementById('returnBody');
+  if (!STATE.returns.length) { body.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">&#8617;</div><div class="empty-text">No return records</div></div></td></tr>'; return; }
+  var html = '';
+  STATE.returns.forEach(function(r) {
+    html += '<tr><td>'+(r.date||'—')+'</td><td class="td-code">'+(r.itemCode||'—')+'</td><td>'+(r.desc||'—')+'</td><td><span class="pill pill-gray">'+(r.unit||'—')+'</span></td><td style="font-weight:600;color:#00695C">'+(r.qty||0)+'</td><td>'+(r.size||'—')+'</td><td>'+(r.customer||'—')+'</td><td>'+(r.whdlNo||'—')+'</td><td>'+(r.remarks||'—')+'</td></tr>';
+  });
+  body.innerHTML = html;
+  document.getElementById('returnBadge').textContent = STATE.returns.length + ' records';
+}
+
+function renderPagination(prefix, total) {
+  var pages = Math.ceil(total/STATE.pageSize);
+  var cur = prefix === 'w' ? STATE.wPage : STATE.rPage;
+  var pag = document.getElementById(prefix+'Pagination');
+  if (pages <= 1) { pag.style.display='none'; return; }
+  pag.style.display = 'flex';
+  document.getElementById(prefix+'PageInfo').textContent = 'Showing '+(((cur-1)*STATE.pageSize)+1)+'-'+Math.min(cur*STATE.pageSize,total)+' of '+total;
+  document.getElementById(prefix+'Prev').disabled = cur === 1;
+  document.getElementById(prefix+'Next').disabled = cur === pages;
+  var nums = '';
+  var start = Math.max(1, cur-2), end = Math.min(pages, cur+2);
+  if (start > 1) nums += '<button class="page-btn" onclick="goPage(\''+prefix+'\',1)">1</button>';
+  if (start > 2) nums += '<span style="padding:5px">...</span>';
+  for (var i=start;i<=end;i++) nums += '<button class="page-btn'+(i===cur?' active':'')+'" onclick="goPage(\''+prefix+'\','+i+')">'+i+'</button>';
+  if (end < pages-1) nums += '<span style="padding:5px">...</span>';
+  if (end < pages) nums += '<button class="page-btn" onclick="goPage(\''+prefix+'\','+pages+')">'+pages+'</button>';
+  document.getElementById(prefix+'PageNums').innerHTML = nums;
+}
+
+function goPage(prefix, page) {
+  if (prefix === 'w') { STATE.wPage = page; renderWithdrawal(); }
+  else { STATE.rPage = page; renderReceived(); }
+}
+
+function changePage(prefix, dir) {
+  if (prefix === 'w') { STATE.wPage = Math.max(1, STATE.wPage+dir); renderWithdrawal(); }
+  else { STATE.rPage = Math.max(1, STATE.rPage+dir); renderReceived(); }
+}
+
+function updateCounts() {}
+
+function saveBeginning() {
+  var code = document.getElementById('begItemCode').value;
+  var qty = document.getElementById('begQty').value;
+  var remarks = document.getElementById('begRemarks').value;
+  if (!code) { showToast('Please select an item code','error'); return; }
+  if (qty === '' || isNaN(qty)) { showToast('Please enter a valid quantity','error'); return; }
+  var item = STATE.items.find(function(i){ return i.code === code; }) || {};
+  STATE.beginning[code] = {qty: parseFloat(qty), remarks: remarks, desc: item.desc, unit: item.unit};
+  saveState();
+  renderBeginning();
+  renderSummary();
+  clearBegForm();
+  showToast('Beginning stock saved for '+code,'success');
+}
+
+function clearBegForm() {
+  document.getElementById('begItemCode').value = '';
+  document.getElementById('begDescription').value = '';
+  document.getElementById('begUnits').value = '';
+  document.getElementById('begQty').value = '';
+  document.getElementById('begRemarks').value = '';
+}
+
+function deleteBeginning(code) {
+  if (!confirm('Delete beginning inventory for '+code+'?')) return;
+  delete STATE.beginning[code];
+  saveState();
+  renderBeginning();
+  renderSummary();
+  showToast('Deleted beginning for '+code,'success');
+}
+
+// When non-empty, saveReceived() will UPDATE this existing record instead of creating a new one.
+var _editingReceivedId = null;
+
+function saveReceived() {
+  var date = document.getElementById('recDate').value;
+  var code = document.getElementById('recItem').value;
+  var qty = document.getElementById('recQty').value;
+  var size = document.getElementById('recSize').value;
+  var mrrNo = document.getElementById('recMRR').value;
+  var supplier = document.getElementById('recSupplier').value;
+  var remarks = document.getElementById('recRemarks').value;
+  if (!date || !code || !qty) { showToast('Date, Item Code, and Quantity are required','error'); return; }
+  var item = STATE.items.find(function(i){ return i.code === code; }) || {};
+  var isEditing = !!_editingReceivedId;
+  var id = isEditing ? _editingReceivedId : ('rec_'+Date.now()+'_'+Math.random().toString(36).substr(2,5));
+  var rec = {id:id,date:date,itemCode:code,desc:item.desc,size:size,qty:parseFloat(qty),mrrNo:mrrNo,supplier:supplier,remarks:remarks,source: isEditing ? (STATE.received.find(function(x){return x.id===id;})||{}).source || 'manual' : 'manual'};
+
+  if (isEditing) {
+    var idx = STATE.received.findIndex(function(x){ return x.id === id; });
+    if (idx >= 0) STATE.received[idx] = rec;
+    else STATE.received.push(rec); // fell through (e.g., deleted elsewhere) — just add it
+  } else {
+    STATE.received.push(rec);
+  }
+
+  saveState();
+  STATE.receivedFiltered = [];
+  renderReceived();
+  renderSummary();
+  clearRecForm();
+  _editingReceivedId = null;
+  _updateReceivedFormButtons();
+
+  if (STATE.config.proxyUrl) {
+    postToScript({action:'save_received', record: rec}, function(){
+      showToast((isEditing?'Updated':'Saved')+' received record — synced to Google Sheet.','success');
+    }, function(err){
+      showToast((isEditing?'Updated':'Saved')+' locally, sync failed: '+err,'error');
+    });
+  } else {
+    showToast((isEditing?'Updated':'Added')+' received record (local only)','success');
+  }
+}
+
+// Load an existing received record into the form for editing.
+function editReceived(id) {
+  var r = STATE.received.find(function(x){ return x.id === id; });
+  if (!r) { showToast('Received record not found','error'); return; }
+  _editingReceivedId = id;
+  document.getElementById('recDate').value     = r.date || '';
+  document.getElementById('recItem').value     = r.itemCode || '';
+  document.getElementById('recQty').value      = r.qty || '';
+  document.getElementById('recSize').value     = r.size || '';
+  document.getElementById('recMRR').value      = r.mrrNo || '';
+  document.getElementById('recSupplier').value = r.supplier || '';
+  document.getElementById('recRemarks').value  = r.remarks || '';
+  _updateReceivedFormButtons();
+  document.getElementById('recDate').scrollIntoView({behavior:'smooth', block:'center'});
+  showToast('Editing '+id+' — make changes then click Save Changes','success');
+}
+
+// Delete a received record (confirm → remove locally → delete in Apps Script).
+function deleteReceived(id) {
+  var r = STATE.received.find(function(x){ return x.id === id; });
+  if (!r) { showToast('Received record not found','error'); return; }
+  if (!confirm('Delete this Received record?\n\nItem: '+r.itemCode+'\nQty: '+r.qty+'\nDate: '+r.date)) return;
+
+  STATE.received = STATE.received.filter(function(x){ return x.id !== id; });
+  saveState();
+  STATE.receivedFiltered = [];
+  renderReceived();
+  renderSummary();
+
+  if (_editingReceivedId === id) {
+    _editingReceivedId = null;
+    clearRecForm();
+    _updateReceivedFormButtons();
+  }
+
+  if (STATE.config.proxyUrl) {
+    postToScript({action:'delete_received', id: id}, function(){
+      showToast('Deleted received record '+id+' (synced).','success');
+    }, function(err){
+      showToast('Deleted locally, remote delete failed: '+err,'error');
+    });
+  } else {
+    showToast('Deleted locally (no Apps Script URL configured)','success');
+  }
+}
+
+// Swap the form's Add/Save button label based on whether we're editing.
+function _updateReceivedFormButtons() {
+  var btnRow = document.querySelector('#tab-received .btn-row');
+  if (!btnRow) return;
+  var primary = btnRow.querySelector('.btn-primary');
+  var cancel  = btnRow.querySelector('.btn-cancel-edit');
+  if (_editingReceivedId) {
+    if (primary) primary.textContent = '✓ Save Changes';
+    if (!cancel) {
+      cancel = document.createElement('button');
+      cancel.className = 'btn-secondary btn-cancel-edit';
+      cancel.textContent = '✕ Cancel Edit';
+      cancel.style.background = '#FFF3E0';
+      cancel.style.color = '#E65100';
+      cancel.style.borderColor = '#FFE0B2';
+      cancel.onclick = function(){
+        _editingReceivedId = null;
+        clearRecForm();
+        _updateReceivedFormButtons();
+      };
+      btnRow.appendChild(cancel);
+    }
+  } else {
+    if (primary) primary.textContent = '+ Add Received Record';
+    if (cancel) cancel.remove();
+  }
+}
+
+function clearRecForm() {
+  ['recDate','recItem','recQty','recSize','recMRR','recSupplier','recRemarks'].forEach(function(id){ document.getElementById(id).value = ''; });
+}
+
+function saveReturn() {
+  var date = document.getElementById('retDate').value;
+  var code = document.getElementById('retItem').value;
+  var qty = document.getElementById('retQty').value;
+  var size = document.getElementById('retSize').value;
+  var customer = document.getElementById('retCustomer').value;
+  var whdlNo = document.getElementById('retWhdlNo').value;
+  var remarks = document.getElementById('retRemarks').value;
+  if (!date || !code || !qty) { showToast('Date, Item Code, and Quantity are required','error'); return; }
+  var item = STATE.items.find(function(i){ return i.code === code; }) || {};
+  var id = 'ret_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+  var rec = {id:id,date:date,itemCode:code,desc:item.desc,unit:item.unit,size:size,qty:parseFloat(qty),customer:customer,whdlNo:whdlNo,remarks:remarks,source:'manual'};
+  STATE.returns.push(rec);
+  saveState();
+  renderReturn();
+  renderSummary();
+  clearRetForm();
+
+  if (STATE.config.proxyUrl) {
+    postToScript({action:'save_return', record: rec}, function(){
+      showToast('Return saved locally + DATA tab.','success');
+    }, function(err){
+      showToast('Saved locally, DATA tab sync failed: '+err,'error');
+    });
+  } else {
+    showToast('Return record saved (local only)','success');
+  }
+}
+
+function clearRetForm() {
+  ['retDate','retItem','retDesc','retUnits','retQty','retSize','retCustomer','retWhdlNo','retRemarks'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function toggleSetupPanel() {
+  var p = document.getElementById('setupPanel');
+  if (!p) return;
+  if (p.style.display === 'none' || !p.style.display) {
+    p.style.display = 'block';
+    p.scrollIntoView({behavior:'smooth', block:'start'});
+  } else {
+    p.style.display = 'none';
+  }
+}
+
+function saveConfig() {
+  STATE.config.proxyUrl = document.getElementById('proxyUrl').value.trim();
+  STATE.config.withdrawalUrl = document.getElementById('gsheetWithdrawal').value.trim();
+  var wRecentEl = document.getElementById('gsheetWithdrawalRecent');
+  STATE.config.withdrawalRecentUrl = wRecentEl ? wRecentEl.value.trim() : (STATE.config.withdrawalRecentUrl||'');
+  STATE.config.receivedUrl = document.getElementById('gsheetReceived').value.trim();
+  STATE.config.returnUrl = document.getElementById('gsheetReturn').value.trim();
+  var dataEl = document.getElementById('gsheetData');
+  STATE.config.dataUrl = dataEl ? dataEl.value.trim() : (STATE.config.dataUrl||'');
+  if (!STATE.config.withdrawalUrl) { showToast('Please enter the Withdrawal sheet URL','error'); return; }
+  saveState();
+  document.getElementById('setupPanel').style.display = 'none';
+  showToast('Config saved! Syncing...','success');
+  syncNow();
+}
+
+function testUrl() {
+  var proxy = document.getElementById('proxyUrl').value.trim();
+  var csvUrl = document.getElementById('gsheetWithdrawal').value.trim();
+  var box = document.getElementById('urlTestResult');
+  box.style.display = 'block';
+  if (!csvUrl) { box.style.background='#FFEBEE'; box.style.color='#C62828'; box.innerHTML='&#9940; Please paste your Withdrawal CSV URL first.'; return; }
+  if (!proxy) {
+    box.style.background='#FFF8E1'; box.style.color='#E65100';
+    box.innerHTML='&#9888; No Apps Script proxy URL entered. Trying public proxies (may be slow or fail)...';
+  } else {
+    box.style.background='#E3F2FD'; box.style.color='#1565C0';
+    box.innerHTML='&#128260; Testing connection via your Apps Script proxy...';
+  }
+  // Temporarily set proxy in state for the test
+  var savedProxy = STATE.config.proxyUrl;
+  STATE.config.proxyUrl = proxy;
+  fetchCSV(csvUrl, function(text) {
+    STATE.config.proxyUrl = savedProxy;
+    var lines = text.trim().split('\n').filter(function(l){ return l.trim(); });
+    box.style.background='#E8F5E9'; box.style.color='#2E7D32';
+    box.innerHTML='&#9989; <strong>Connection successful!</strong> Got <strong>' + lines.length + ' rows</strong> of data. Click Save &amp; Connect to proceed.';
+  }, function(err) {
+    STATE.config.proxyUrl = savedProxy;
+    box.style.background='#FFEBEE'; box.style.color='#C62828';
+    box.innerHTML='&#10060; <strong>Failed.</strong> ' + (proxy ? 'Your Apps Script proxy could not fetch the URL. Make sure you deployed it correctly and set access to <strong>Anyone</strong>.' : 'All public proxies failed. Please set up the Apps Script proxy (Step 1 above).') + '<br><small>Error: ' + err + '</small>';
+  });
+}
+
+// ===== Sync (Web14.6) - non-blocking + fully parallel =====
+// Everything (5 CSVs + 2 Apps Script reads) fires in ONE Promise.all so total
+// wall-time = slowest single request, not sum of stages. Each job renders the
+// section it affects as soon as it lands (progressive render), so the user
+// sees results streaming in rather than a 20s freeze. The UI is never blocked;
+// a small pill in the bottom-left shows progress while the user keeps clicking.
+var _syncInFlight = false;
+function syncNow(opts) {
+  opts = opts || {};
+  if (!STATE.config.withdrawalUrl) {
+    document.getElementById('setupPanel').style.display = 'block';
+    showToast('Please configure Google Sheets URL first','error');
+    return;
+  }
+  if (_syncInFlight) {
+    if (!opts.silent) showToast('A sync is already running - please wait...', 'error');
+    return;
+  }
+  _syncInFlight = true;
+
+  var btn = document.getElementById('syncBtn');
+  if (btn) { btn.textContent = 'Syncing...'; btn.classList.add('loading'); }
+  var t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
+  // --- Non-blocking indicator ---
+  var ind = document.getElementById('syncIndicator');
+  var indTxt = document.getElementById('syncIndicatorText');
+  var indProg = document.getElementById('syncIndicatorProgress');
+  if (ind) { ind.className = 'sync-indicator show'; }
+  if (indTxt) indTxt.textContent = 'Syncing from Google Sheets...';
+
+  // Helpers: always-resolve wrappers so one bad fetch never blocks the rest.
+  function pFetch(url, label) {
+    return new Promise(function(resolve) {
+      if (!url) { resolve({ok:false, label:label, skipped:true}); return; }
+      fetchCSV(url,
+        function(text){ resolve({ok:true, label:label, text:text}); },
+        function(err){ resolve({ok:false, label:label, error:err}); },
+        {force: !!opts.force});  // manual Sync Now bypasses URL cache
+    });
+  }
+  function pAppsScript(action, label) {
+    return new Promise(function(resolve) {
+      if (!STATE.config.proxyUrl) { resolve({ok:false, label:label, skipped:true}); return; }
+      fetchFromAppsScript(action,
+        function(rows){ resolve({ok:true, label:label, rows:rows}); },
+        function(err){ resolve({ok:false, label:label, error:err}); });
+    });
+  }
+
+  var failed = [];
+  var finishedCount = 0;
+  var total = 0;
+
+  var jobs = [];
+  function addJob(promise, applyFn) {
+    total++;
+    jobs.push(promise.then(function(r) {
+      try { applyFn(r); } catch(e){ console.error('Apply failed for ' + r.label + ':', e); }
+      finishedCount++;
+      if (indProg) indProg.textContent = finishedCount + '/' + total;
+      return r;
+    }));
+  }
+
+  // 1. Item codes (descriptions enrich everything else)
+  addJob(pFetch(ITEMCODE_CSV_URL, 'items'), function(r){
+    if (r.ok) {
+      var parsed = parseItemCodeCSV(r.text);
+      if (parsed.length) {
+        parsed.forEach(function(newItem) {
+          var existing = STATE.items.find(function(i){ return i.code === newItem.code; });
+          if (existing) {
+            existing.desc = newItem.desc;
+            existing.unit = newItem.unit;
+            existing.size = newItem.size;
+            if (STATE.beginning[newItem.code]) {
+              STATE.beginning[newItem.code].desc = newItem.desc;
+              STATE.beginning[newItem.code].unit = newItem.unit;
+            }
+          } else { STATE.items.push(newItem); }
+        });
+        STATE.itemCodeData = parsed;
+      }
+      populateItemSelects();
+    } else if (!r.skipped) { failed.push('items'); }
+  });
+
+  // 2. Withdrawal CSV - biggest / most-awaited. Progressive render on arrival.
+  //    If a "recent" URL is configured, prefer it for fast default sync.
+  //    The full history can be pulled on demand via the Load Full History button.
+  var withdrawalUrlForSync = STATE.config.withdrawalRecentUrl || STATE.config.withdrawalUrl;
+  STATE._lastSyncUsedRecent = !!STATE.config.withdrawalRecentUrl;
+  addJob(pFetch(withdrawalUrlForSync, 'withdrawal'), function(r){
+    if (r.ok) {
+      parseWithdrawalCSV(r.text);
+      STATE.withdrawal.forEach(function(w) {
+        if (!w.desc) {
+          var it = STATE.items.find(function(i){ return i.code === w.itemCode; });
+          if (it) w.desc = it.desc || '';
+        }
+      });
+      STATE.withdrawalFiltered = [];
+      try { if (typeof renderWithdrawals === 'function') renderWithdrawals(); } catch(e){}
+      try { if (typeof renderSummary === 'function') renderSummary(); } catch(e){}
+    } else { failed.push('withdrawal'); }
+  });
+
+  // 3. Received / Returns / DATA CSVs (legacy optional)
+  addJob(pFetch(STATE.config.receivedUrl, 'received'), function(r){
+    if (r.ok) parseReceivedCSV(r.text);
+    else if (!r.skipped) failed.push('received');
+  });
+  addJob(pFetch(STATE.config.returnUrl, 'returns'), function(r){
+    if (r.ok) parseReturnCSV(r.text);
+    else if (!r.skipped) failed.push('returns');
+  });
+  addJob(pFetch(STATE.config.dataUrl, 'data'), function(r){
+    if (r.ok) parseDataCSV(r.text);
+    else if (!r.skipped) failed.push('data');
+  });
+
+  // 4. Apps Script backend reads - now IN PARALLEL with CSVs (previously sequential)
+  addJob(pAppsScript('read_received', 'backend_received'), function(r){
+    if (r.ok) { try { applyBackendReceived(r.rows); } catch(e){ console.warn(e); } }
+    else if (!r.skipped) console.warn('read_received:', r.error);
+  });
+  addJob(pAppsScript('read_returns', 'backend_returns'), function(r){
+    if (r.ok) { try { applyBackendReturns(r.rows); } catch(e){ console.warn(e); } }
+    else if (!r.skipped) console.warn('read_returns:', r.error);
+  });
+
+  // Final pass when all jobs are done.
+  Promise.all(jobs).then(function() {
+    _syncInFlight = false;
+    if (btn) { btn.textContent = 'Sync Now'; btn.classList.remove('loading'); }
+    STATE.lastSync = new Date().toISOString();
+    saveState();
+    try { renderAll(); } catch(e){}
+
+    var elapsed = Math.round(((typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) - t0)/100)/10;
+    var hardFail = failed.indexOf('withdrawal') !== -1;
+    var msg;
+    if (hardFail) {
+      msg = 'Sync failed (' + elapsed + 's) - withdrawal unreachable';
+      if (ind) ind.className = 'sync-indicator show err';
+      if (indTxt) indTxt.textContent = msg;
+      if (indProg) indProg.textContent = '';
+      if (!opts.silent) showToast(msg + '. Check internet / Apps Script URL.','error');
+    } else if (failed.length) {
+      msg = 'Synced in ' + elapsed + 's (partial: ' + failed.join(', ') + ')';
+      if (ind) ind.className = 'sync-indicator show done';
+      if (indTxt) indTxt.textContent = msg;
+      if (indProg) indProg.textContent = '';
+      if (!opts.silent) showToast('Sync done in ' + elapsed + 's. ' + STATE.withdrawal.length + ' withdrawals. Failed: ' + failed.join(', '), 'success');
+    } else {
+      msg = 'Sync complete - ' + elapsed + 's - ' + STATE.withdrawal.length + ' withdrawals';
+      if (ind) ind.className = 'sync-indicator show done';
+      if (indTxt) indTxt.textContent = msg;
+      if (indProg) indProg.textContent = '';
+      if (!opts.silent) showToast(msg, 'success');
+    }
+    setTimeout(function(){ if (ind && !_syncInFlight) ind.className = 'sync-indicator'; }, hardFail ? 6000 : 2500);
+  }).catch(function(err){
+    _syncInFlight = false;
+    if (btn) { btn.textContent = 'Sync Now'; btn.classList.remove('loading'); }
+    if (ind) ind.className = 'sync-indicator show err';
+    if (indTxt) indTxt.textContent = 'Sync error: ' + err;
+    if (indProg) indProg.textContent = '';
+    if (!opts.silent) showToast('Sync error: ' + err, 'error');
+  });
+}
+
+// Manually fetch the FULL withdrawal CSV (used by Load Full History button).
+// Useful when default sync uses the smaller recent-only CSV for speed.
+function loadFullWithdrawalHistory() {
+  if (!STATE.config.withdrawalUrl) {
+    showToast('No full withdrawal URL configured', 'error');
+    return;
+  }
+  var btn = document.getElementById('loadFullHistoryBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Loading full history...'; }
+  var ind = document.getElementById('syncIndicator');
+  var indTxt = document.getElementById('syncIndicatorText');
+  var indProg = document.getElementById('syncIndicatorProgress');
+  if (ind) ind.className = 'sync-indicator show';
+  if (indTxt) indTxt.textContent = 'Loading full withdrawal history...';
+  if (indProg) indProg.textContent = '';
+  fetchCSV(STATE.config.withdrawalUrl, function(text){
+    parseWithdrawalCSV(text);
+    STATE.withdrawal.forEach(function(w) {
+      if (!w.desc) {
+        var it = STATE.items.find(function(i){ return i.code === w.itemCode; });
+        if (it) w.desc = it.desc || '';
+      }
+    });
+    STATE.withdrawalFiltered = [];
+    saveState();
+    try { renderWithdrawals(); renderSummary(); } catch(e){}
+    if (btn) { btn.disabled = false; btn.textContent = '⏬ Load Full History'; }
+    if (ind) ind.className = 'sync-indicator show done';
+    if (indTxt) indTxt.textContent = 'Full history loaded - ' + STATE.withdrawal.length + ' withdrawals';
+    showToast('Full history loaded - ' + STATE.withdrawal.length + ' withdrawals', 'success');
+    setTimeout(function(){ if (ind) ind.className = 'sync-indicator'; }, 2500);
+  }, function(err){
+    if (btn) { btn.disabled = false; btn.textContent = '⏬ Load Full History'; }
+    if (ind) ind.className = 'sync-indicator show err';
+    if (indTxt) indTxt.textContent = 'Full history load failed: ' + err;
+    showToast('Failed to load full history: ' + err, 'error');
+    setTimeout(function(){ if (ind) ind.className = 'sync-indicator'; }, 5000);
+  }, {force: true});
+}
+
+// Parse received CSV from GSheet (if URL configured)
+function parseReceivedCSV(csvText) {
+  var lines = csvText.split('\n');
+  if (lines.length < 2) return;
+  var header = parseCSVLine(lines[0]);
+  var hLow = header.map(function(h){ return h.trim().toLowerCase(); });
+  var dateIdx = hLow.indexOf('date'), codeIdx = hLow.indexOf('item code');
+  if (codeIdx === -1) codeIdx = hLow.indexOf('itemcode');
+  var descIdx = hLow.indexOf('description'), qtyIdx = hLow.indexOf('qty');
+  if (qtyIdx === -1) qtyIdx = hLow.indexOf('quantity');
+  var mrrIdx = hLow.indexOf('mrr'), supplierIdx = hLow.indexOf('supplier');
+  var sizeIdx = hLow.indexOf('size');
+  if (dateIdx === -1) dateIdx = 0;
+  if (codeIdx === -1) codeIdx = 1;
+  if (qtyIdx === -1) qtyIdx = 2;
+  var gsheetRecs = [];
+  for (var i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var cols = parseCSVLine(lines[i]);
+    var code = (cols[codeIdx]||'').trim();
+    var qty = parseFloat(cols[qtyIdx]) || 0;
+    if (!code && !qty) continue;
+    gsheetRecs.push({
+      date: formatRawDate((cols[dateIdx]||'').trim()),
+      itemCode: code,
+      desc: descIdx >= 0 ? (cols[descIdx]||'').trim() : '',
+      qty: qty,
+      mrrNo: mrrIdx >= 0 ? (cols[mrrIdx]||'').trim() : '',
+      supplier: supplierIdx >= 0 ? (cols[supplierIdx]||'').trim() : '',
+      size: sizeIdx >= 0 ? (cols[sizeIdx]||'').trim() : '',
+      source: 'gsheet'
+    });
+  }
+  // Merge: keep manual records, replace all gsheet records
+  var manual = STATE.received.filter(function(r){ return r.source !== 'gsheet'; });
+  STATE.received = manual.concat(gsheetRecs);
+}
+
+// Parse returns CSV from GSheet (if URL configured)
+function parseReturnCSV(csvText) {
+  var lines = csvText.split('\n');
+  if (lines.length < 2) return;
+  var header = parseCSVLine(lines[0]);
+  var hLow = header.map(function(h){ return h.trim().toLowerCase(); });
+  var dateIdx = hLow.indexOf('date'), codeIdx = hLow.indexOf('item code');
+  if (codeIdx === -1) codeIdx = hLow.indexOf('itemcode');
+  var descIdx = hLow.indexOf('description'), qtyIdx = hLow.indexOf('qty');
+  if (qtyIdx === -1) qtyIdx = hLow.indexOf('quantity');
+  if (dateIdx === -1) dateIdx = 0;
+  if (codeIdx === -1) codeIdx = 1;
+  if (qtyIdx === -1) qtyIdx = 2;
+  var gsheetRets = [];
+  for (var i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var cols = parseCSVLine(lines[i]);
+    var code = (cols[codeIdx]||'').trim();
+    var qty = parseFloat(cols[qtyIdx]) || 0;
+    if (!code && !qty) continue;
+    gsheetRets.push({
+      date: formatRawDate((cols[dateIdx]||'').trim()),
+      itemCode: code,
+      desc: descIdx >= 0 ? (cols[descIdx]||'').trim() : '',
+      qty: qty,
+      source: 'gsheet'
+    });
+  }
+  var manual = STATE.returns.filter(function(r){ return r.source !== 'gsheet'; });
+  STATE.returns = manual.concat(gsheetRets);
+}
+
+// ===== DATA tab backend integration (Web14) =====
+// Apps Script /exec 302-redirects to script.googleusercontent.com, and browsers drop
+// the POST body when auto-following that redirect (converting it to GET). That meant
+// our earlier POST-with-no-cors "succeeded" at the network layer but the Apps Script
+// never actually received the JSON body, so the DATA tab stayed empty.
+// Fix: send writes as GET with the payload JSON URL-encoded into the query string.
+// GET preserves the parameters across the redirect, CORS is allowed, and we can
+// actually read the JSON response to confirm the write really happened.
+// Fetch a read action (read_received / read_returns) from the Apps Script.
+// Returns rows (2D array) through onSuccess, or an error string through onError.
+function fetchFromAppsScript(action, onSuccess, onError) {
+  var proxy = STATE.config.proxyUrl || '';
+  if (!proxy) { onError('No Apps Script URL'); return; }
+  var sep = proxy.indexOf('?') >= 0 ? '&' : '?';
+  var url = proxy + sep + 'action=' + encodeURIComponent(action);
+  var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 8000);
+  fetch(url, {method:'GET', cache:'no-cache', redirect:'follow', signal: ctrl ? ctrl.signal : undefined})
+    .then(function(res){ return res.text(); })
+    .then(function(txt){
+      clearTimeout(timer);
+      var obj = null;
+      try { obj = JSON.parse(txt); } catch(e) {}
+      if (obj && obj.ok) onSuccess(obj.rows || []);
+      else onError((obj && obj.error) ? obj.error : ('Non-JSON response: ' + txt.slice(0,200)));
+    })
+    .catch(function(err){
+      clearTimeout(timer);
+      onError(String(err && err.message ? err.message : err));
+    });
+}
+
+// Convert the RECEIVED tab rows (including header row) into STATE.received.
+// Expected columns: Date, ItemCode, Qty, Size, MRR, Supplier, Remarks, ID
+function applyBackendReceived(rows) {
+  if (!rows || rows.length < 2) {
+    // Keep only legacy gsheet-sourced rows; drop anything that came from the backend before
+    STATE.received = (STATE.received||[]).filter(function(r){ return r.source === 'gsheet'; });
+    return;
+  }
+  var header = rows[0].map(function(h){ return String(h||'').trim().toLowerCase(); });
+  function col(name){ return header.indexOf(name); }
+  var iDate = col('date'), iCode = col('itemcode'), iQty = col('qty'),
+      iSize = col('size'), iMrr = col('mrr'), iSup = col('supplier'),
+      iRem = col('remarks'), iId = col('id');
+  var backendRecs = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    var code = String(iCode >= 0 ? r[iCode] : '').trim();
+    if (!code) continue;
+    var item = STATE.items.find(function(it){ return it.code === code; }) || {};
+    backendRecs.push({
+      id:       iId   >= 0 ? String(r[iId]||'').trim()  : '',
+      date:     iDate >= 0 ? formatRawDate(String(r[iDate]||'')) : '',
+      itemCode: code,
+      desc:     item.desc || '',
+      size:     iSize >= 0 ? String(r[iSize]||'').trim() : '',
+      qty:      iQty  >= 0 ? (parseFloat(r[iQty])||0)   : 0,
+      mrrNo:    iMrr  >= 0 ? String(r[iMrr]||'').trim()  : '',
+      supplier: iSup  >= 0 ? String(r[iSup]||'').trim()  : '',
+      remarks:  iRem  >= 0 ? String(r[iRem]||'').trim()  : '',
+      source:   'backend'
+    });
+  }
+  var legacy = (STATE.received||[]).filter(function(r){ return r.source === 'gsheet'; });
+  STATE.received = backendRecs.concat(legacy);
+}
+
+// Convert the RETURNS tab rows into STATE.returns.
+// Expected columns: Date, ItemCode, Qty, Size, Customer, WhdlNo, Remarks, ID
+function applyBackendReturns(rows) {
+  if (!rows || rows.length < 2) {
+    STATE.returns = (STATE.returns||[]).filter(function(r){ return r.source === 'gsheet'; });
+    return;
+  }
+  var header = rows[0].map(function(h){ return String(h||'').trim().toLowerCase(); });
+  function col(name){ return header.indexOf(name); }
+  var iDate = col('date'), iCode = col('itemcode'), iQty = col('qty'),
+      iSize = col('size'), iCust = col('customer'), iWhdl = col('whdlno'),
+      iRem = col('remarks'), iId = col('id');
+  var backendRecs = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    var code = String(iCode >= 0 ? r[iCode] : '').trim();
+    if (!code) continue;
+    var item = STATE.items.find(function(it){ return it.code === code; }) || {};
+    backendRecs.push({
+      id:       iId   >= 0 ? String(r[iId]||'').trim()  : '',
+      date:     iDate >= 0 ? formatRawDate(String(r[iDate]||'')) : '',
+      itemCode: code,
+      desc:     item.desc || '',
+      unit:     item.unit || '',
+      size:     iSize >= 0 ? String(r[iSize]||'').trim() : '',
+      qty:      iQty  >= 0 ? (parseFloat(r[iQty])||0)   : 0,
+      customer: iCust >= 0 ? String(r[iCust]||'').trim() : '',
+      whdlNo:   iWhdl >= 0 ? String(r[iWhdl]||'').trim() : '',
+      remarks:  iRem  >= 0 ? String(r[iRem]||'').trim()  : '',
+      source:   'backend'
+    });
+  }
+  var legacy = (STATE.returns||[]).filter(function(r){ return r.source === 'gsheet'; });
+  STATE.returns = backendRecs.concat(legacy);
+}
+
+function postToScript(payload, onSuccess, onError) {
+  var proxy = STATE.config.proxyUrl || '';
+  if (!proxy) { if (onError) onError('No Apps Script URL configured'); return; }
+  var action = (payload && payload.action) || '';
+  var sep = proxy.indexOf('?') >= 0 ? '&' : '?';
+  var url = proxy + sep + 'action=' + encodeURIComponent(action)
+          + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+  // Guard against runaway URLs (Apps Script caps around ~8KB on the URL)
+  if (url.length > 7500) {
+    if (onError) onError('Payload too large for GET (' + url.length + ' chars). Split into smaller batches.');
+    return;
+  }
+  var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 15000);
+  fetch(url, {
+    method: 'GET',
+    cache: 'no-cache',
+    redirect: 'follow',
+    signal: ctrl ? ctrl.signal : undefined
+  })
+  .then(function(res){ return res.text(); })
+  .then(function(txt){
+    clearTimeout(timer);
+    var obj = null;
+    try { obj = JSON.parse(txt); } catch(e) { /* not JSON — treat as error */ }
+    if (obj && obj.ok) {
+      if (onSuccess) onSuccess(obj);
+    } else {
+      var msg = (obj && obj.error) ? obj.error
+              : (txt ? ('Non-JSON response from Apps Script (first 200 chars): ' + txt.slice(0,200))
+                     : 'Empty response from Apps Script');
+      if (onError) onError(msg);
+    }
+  })
+  .catch(function(err){
+    clearTimeout(timer);
+    if (onError) onError(String(err && err.message ? err.message : err));
+  });
+}
+
+// Parse the DATA tab CSV (2-column: ItemCode in A, Quantity in B) and merge
+// rows back into STATE.beginning. If the sheet still has the legacy 14-column
+// "Type, Timestamp, ID, ..." header, fall back to the old parser so existing
+// data keeps loading.
+function parseDataCSV(csvText) {
+  var lines = csvText.split('\n');
+  if (lines.length < 1) return;
+  var header = parseCSVLine(lines[0] || '').map(function(h){ return h.trim().toLowerCase(); });
+  var looksLegacy = header.indexOf('type') !== -1 && header.indexOf('itemcode') !== -1;
+  if (looksLegacy) { parseDataCSV_legacy14col(csvText); return; }
+
+  // --- Simple 2-column layout: col A = ItemCode, col B = Quantity ---
+  // First row may be a header (non-numeric col B) or already data.
+  var newBeginning = {};
+  var startIdx = 0;
+  var firstCols = parseCSVLine(lines[0] || '');
+  var firstQty = firstCols.length > 1 ? firstCols[1] : '';
+  var firstQtyIsNumber = firstQty !== '' && !isNaN(parseFloat(firstQty));
+  if (!firstQtyIsNumber) startIdx = 1; // treat row 0 as header
+
+  for (var i = startIdx; i < lines.length; i++) {
+    if (!lines[i] || !lines[i].trim()) continue;
+    var cols = parseCSVLine(lines[i]);
+    var code = (cols[0]||'').trim();
+    if (!code) continue;
+    var qty = parseFloat(cols[1]) || 0;
+    var item = STATE.items.find(function(it){ return it.code === code; }) || {};
+    newBeginning[code] = {
+      qty: qty,
+      remarks: '',
+      desc: item.desc || '',
+      unit: item.unit || ''
+    };
+  }
+  STATE.beginning = newBeginning;
+}
+
+// Legacy 14-column DATA tab parser — kept for backward compatibility with older sheets.
+function parseDataCSV_legacy14col(csvText) {
+  var lines = csvText.split('\n');
+  if (lines.length < 2) return;
+  var header = parseCSVLine(lines[0]).map(function(h){ return h.trim().toLowerCase(); });
+  function col(name){ return header.indexOf(name); }
+  var iType = col('type'), iId = col('id'), iDate = col('date'),
+      iCode = col('itemcode'), iQty = col('qty'), iDesc = col('desc'),
+      iSize = col('size'), iUnit = col('unit'), iMRR = col('mrr'),
+      iSup = col('supplier'), iCust = col('customer'),
+      iWhdl = col('whdlno'), iRem = col('remarks');
+  if (iType === -1 || iCode === -1) return;
+
+  var newBeginning = {};
+  var manualReceived = [];
+  var manualReturns = [];
+
+  for (var i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var cols = parseCSVLine(lines[i]);
+    var type = (cols[iType]||'').trim().toLowerCase();
+    var code = (cols[iCode]||'').trim();
+    if (!code) continue;
+    var qty = parseFloat(cols[iQty]) || 0;
+
+    if (type === 'beginning') {
+      var item = STATE.items.find(function(it){ return it.code === code; }) || {};
+      newBeginning[code] = {
+        qty: qty,
+        remarks: iRem >= 0 ? (cols[iRem]||'').trim() : '',
+        desc: iDesc >= 0 ? (cols[iDesc]||'').trim() : (item.desc||''),
+        unit: iUnit >= 0 ? (cols[iUnit]||'').trim() : (item.unit||'')
+      };
+    } else if (type === 'received') {
+      manualReceived.push({
+        id: iId >= 0 ? (cols[iId]||'').trim() : '',
+        date: iDate >= 0 ? formatRawDate((cols[iDate]||'').trim()) : '',
+        itemCode: code,
+        desc: iDesc >= 0 ? (cols[iDesc]||'').trim() : '',
+        size: iSize >= 0 ? (cols[iSize]||'').trim() : '',
+        qty: qty,
+        mrrNo: iMRR >= 0 ? (cols[iMRR]||'').trim() : '',
+        supplier: iSup >= 0 ? (cols[iSup]||'').trim() : '',
+        remarks: iRem >= 0 ? (cols[iRem]||'').trim() : '',
+        source: 'manual'
+      });
+    } else if (type === 'return') {
+      manualReturns.push({
+        id: iId >= 0 ? (cols[iId]||'').trim() : '',
+        date: iDate >= 0 ? formatRawDate((cols[iDate]||'').trim()) : '',
+        itemCode: code,
+        desc: iDesc >= 0 ? (cols[iDesc]||'').trim() : '',
+        unit: iUnit >= 0 ? (cols[iUnit]||'').trim() : '',
+        size: iSize >= 0 ? (cols[iSize]||'').trim() : '',
+        qty: qty,
+        customer: iCust >= 0 ? (cols[iCust]||'').trim() : '',
+        whdlNo: iWhdl >= 0 ? (cols[iWhdl]||'').trim() : '',
+        remarks: iRem >= 0 ? (cols[iRem]||'').trim() : '',
+        source: 'manual'
+      });
+    }
+  }
+
+  STATE.beginning = newBeginning;
+  var gsheetReceived = STATE.received.filter(function(r){ return r.source === 'gsheet'; });
+  STATE.received = manualReceived.concat(gsheetReceived);
+  var gsheetReturns = STATE.returns.filter(function(r){ return r.source === 'gsheet'; });
+  STATE.returns = manualReturns.concat(gsheetReturns);
+}
+
+// Push ALL current localStorage state to the DATA tab in one shot.
+// This is the "rescue my Brave data" button — run it once from the device that has the real data.
+function backupLocalToSheet() {
+  if (!STATE.config.proxyUrl) { showToast('Please configure the Apps Script URL first','error'); return; }
+  if (!confirm('This will OVERWRITE the DATA tab in your Google Sheet with everything currently saved in this browser.\n\nContinue?')) return;
+
+  var beginningArr = Object.keys(STATE.beginning).map(function(code){
+    var b = STATE.beginning[code] || {};
+    return {code: code, qty: b.qty||0, remarks: b.remarks||'', desc: b.desc||'', unit: b.unit||''};
+  });
+  var manualReceived = STATE.received.filter(function(r){ return r.source !== 'gsheet'; });
+  var manualReturns = STATE.returns.filter(function(r){ return r.source !== 'gsheet'; });
+
+  showLoading('Backing up to DATA tab...');
+  postToScript({
+    action: 'backup_all',
+    data: {beginning: beginningArr, received: manualReceived, returns: manualReturns}
+  }, function(res){
+    hideLoading();
+    showToast('Backup complete! '+res.written+' rows written to DATA tab.','success');
+  }, function(err){
+    hideLoading();
+    showToast('Backup failed: '+err,'error');
+  });
+}
+
+// GitHub Pages Fetch Strategy:
+// 1. Direct fetch — works for published Google Sheet CSVs (they allow CORS).
+// 2. Apps Script proxy (Code.gs) — reliable fallback; handles any URL.
+// 3. allorigins.win — last resort public proxy.
+// Each attempt has a 5s timeout before moving to the next.
+// In-memory URL cache (Web14.6).
+// Service Workers don't work for HTML opened from file://, so we de-dupe
+// in-process. TTL kept short (30s) so we never serve genuinely stale data
+// in a normal session — its job is purely to skip redundant network calls
+// when sync events fire close together (e.g. tab-focus + hourly timer).
+var _urlCache = {};
+var URL_CACHE_TTL_MS = 30000;
+
+function fetchCSV(url, onSuccess, onError, opts) {
+  opts = opts || {};
+  // Cache hit short-circuit
+  if (!opts.force && url && _urlCache[url] && (Date.now() - _urlCache[url].ts) < URL_CACHE_TTL_MS) {
+    var cached = _urlCache[url].text;
+    setTimeout(function(){ onSuccess(cached); }, 0);
+    return;
+  }
+  var proxy = STATE.config.proxyUrl || '';
+  var enc = encodeURIComponent(url);
+  var attempts = [];
+
+  // 1. Direct — fastest for published docs.google.com CSVs
+  attempts.push({url: url, type: 'text', name: 'direct'});
+
+  // 2. User's Apps Script proxy (reliable fallback)
+  if (proxy) attempts.push({url: proxy + '?url=' + enc, type: 'text', name: 'appsScript'});
+
+  // 3. allorigins JSON (last-resort public proxy)
+  attempts.push({
+    url: 'https://api.allorigins.win/get?url=' + enc,
+    type: 'json',
+    extract: function(j) { return j && j.contents ? j.contents : null; },
+    name: 'allorigins'
+  });
+
+  // Remember which attempt worked last time and try it first on the next fetch
+  if (STATE._lastGoodAttempt) {
+    for (var i = 0; i < attempts.length; i++) {
+      if (attempts[i].name === STATE._lastGoodAttempt && i > 0) {
+        var best = attempts.splice(i, 1)[0];
+        attempts.unshift(best);
+        break;
+      }
+    }
+  }
+
+  function isGoodCSV(t) {
+    if (!t || t.length < 5) return false;
+    var s = t.trim();
+    if (s.startsWith('<!') || s.startsWith('<html') || s.startsWith('<HTML')) return false;
+    return true;
+  }
+
+  function tryFetch(idx) {
+    if (idx >= attempts.length) { onError('All ' + attempts.length + ' attempts failed'); return; }
+    var a = attempts[idx];
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timeoutId = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 5000);
+
+    fetch(a.url, {cache: 'no-cache', signal: ctrl ? ctrl.signal : undefined})
+      .then(function(res) {
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return a.type === 'json' ? res.json() : res.text();
+      })
+      .then(function(data) {
+        var text = a.type === 'json' ? (a.extract ? a.extract(data) : null) : data;
+        if (isGoodCSV(text)) {
+          STATE._lastGoodAttempt = a.name;
+          if (url) _urlCache[url] = {text: text, ts: Date.now()};
+          onSuccess(text);
+        } else {
+          tryFetch(idx + 1);
+        }
+      })
+      .catch(function(){ clearTimeout(timeoutId); tryFetch(idx + 1); });
+  }
+  tryFetch(0);
+}
+
+function parseWithdrawalCSV(csvText) {
+  // Column mapping (0-indexed) — Sales Order tab layout:
+  // A=0  date
+  // B=1  withdrawal no
+  // G=6  width
+  // H=7  length
+  // J=9  qty withdrawn
+  // L=11 sales order no
+  // M=12 shipment no
+  // N=13 customer
+  // O=14 item code   (legacy — may now be blank or absent)
+  // S=18 item description (new primary source — used to resolve item code via DESC_TO_CODE map)
+  //
+  // Resolution order for item code:
+  //   1. Column S description  → DESC_TO_CODE lookup  (new source)
+  //   2. Column S description  → STATE.items desc match (flexible fallback)
+  //   3. Column O code as-is   (legacy fallback)
+  var lines = csvText.split('\n');
+  if (lines.length < 2) return;
+  var results = [];
+  for (var i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var cols = parseCSVLine(lines[i]);
+    var qty = parseFloat(cols[9]) || 0;
+
+    // --- Resolve item code ---
+    var rawDesc = (cols[18] || '').trim();           // column S: item description
+    var colOCode = (cols[14] || '').trim();           // column O: legacy item code
+    var itemCode = '';
+    var resolvedDesc = '';
+
+    if (rawDesc) {
+      var descKey = rawDesc.toLowerCase().replace(/\s+/g, ' ');
+      // 1. Exact match in DESC_TO_CODE map
+      if (DESC_TO_CODE[descKey]) {
+        itemCode = DESC_TO_CODE[descKey];
+        resolvedDesc = rawDesc;
+      } else {
+        // 2. Fuzzy match against STATE.items descriptions (catches minor spacing/case differences)
+        var matched = STATE.items.find(function(it) {
+          return it.desc && it.desc.toLowerCase().trim() === descKey;
+        });
+        if (matched) {
+          itemCode = matched.code;
+          resolvedDesc = rawDesc;
+        }
+      }
+    }
+
+    // 3. Fall back to column O legacy code if description lookup failed
+    if (!itemCode && colOCode) {
+      itemCode = colOCode;
+    }
+
+    if (!itemCode && !qty) continue;
+
+    var rawDate = (cols[0] || '').trim();
+
+    // Legacy width-based remapping (kept for backward compatibility with old rows
+    // that still use the old base codes in column O)
+    if (!resolvedDesc && (itemCode === 'VG' || itemCode === 'VC40YB' || itemCode === 'SPYB')) {
+      var rawWidth = parseFloat((cols[6] || '').trim());
+      if (itemCode === 'VG') {
+        if (rawWidth == 0.915) itemCode = 'VG36';
+        else if (rawWidth == 1.07) itemCode = 'VG42';
+      } else if (itemCode === 'VC40YB') {
+        if (rawWidth == 0.915) itemCode = 'VC40YB_36';
+        else if (rawWidth == 1.07) itemCode = 'VC40YB_42';
+      } else if (itemCode === 'SPYB') {
+        if (rawWidth == 0.915) itemCode = 'SPYB_36';
+        else if (rawWidth == 1.22) itemCode = 'SPYB_48';
+      }
+    }
+
+    var item = STATE.items.find(function(it) { return it.code === itemCode; }) || {};
+    results.push({
+      rawDate: rawDate,
+      date: formatRawDate(rawDate),
+      itemCode: itemCode,
+      desc: resolvedDesc || item.desc || '',
+      withdrawalNo: (cols[1]  || '').trim(),
+      width:        (cols[6]  || '').trim(),
+      length:       (cols[7]  || '').trim(),
+      qty: qty,
+      salesOrderNo: (cols[11] || '').trim(),
+      shipmentNo:   (cols[12] || '').trim(),
+      customer:     (cols[13] || '').trim()
+    });
+  }
+  // Sort latest first
+  results.sort(function(a, b) {
+    var da = new Date(a.rawDate), db = new Date(b.rawDate);
+    if (isNaN(da)) return 1;
+    if (isNaN(db)) return -1;
+    return db - da;
+  });
+  if (results.length) STATE.withdrawal = results;
+}
+
+function parseCSVLine(line) {
+  var result = [], current = '', inQuotes = false;
+  for (var i=0;i<line.length;i++) {
+    var ch = line[i];
+    if (ch === '"') { inQuotes = !inQuotes; continue; }
+    if (ch === ',' && !inQuotes) { result.push(current); current = ''; continue; }
+    current += ch;
+  }
+  result.push(current);
+  return result;
+}
+
+function formatRawDate(raw) {
+  if (!raw) return '—';
+  raw = raw.trim();
+  if (!raw) return '—';
+  try {
+    var d = new Date(raw);
+    if (!isNaN(d)) return d.toLocaleDateString('en-PH', {year:'numeric',month:'short',day:'numeric'});
+  } catch(e) {}
+  return raw;
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try {
+    var d = new Date(iso);
+    return d.toLocaleString('en-PH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  } catch(e) { return iso; }
+}
+
+// Auto-sync (Web14.6) — debounced for tab visibility.
+//   - Hourly timer skips when the tab is hidden (no point syncing in background)
+//   - When the tab becomes visible, sync silently if data is older than 15 min
+//   - Background syncs use the non-blocking indicator and silent toasts
+var autoSyncTimer = null;
+var _visibilityHandlerInstalled = false;
+function startAutoSync() {
+  if (autoSyncTimer) clearInterval(autoSyncTimer);
+  autoSyncTimer = setInterval(function() {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    if (STATE.config.withdrawalUrl) syncNow({silent: true});
+  }, 3600000);
+
+  if (!_visibilityHandlerInstalled && typeof document !== 'undefined') {
+    _visibilityHandlerInstalled = true;
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) return;
+      if (!STATE.config.withdrawalUrl) return;
+      var lastSyncMs = STATE.lastSync ? new Date(STATE.lastSync).getTime() : 0;
+      var ageMs = lastSyncMs ? (Date.now() - lastSyncMs) : Infinity;
+      if (ageMs > 900000) {
+        syncNow({silent: true});
+      }
+    });
+  }
+}
+
+function filterWithdrawal() {
+  var q = document.getElementById('wFilter').value.toLowerCase();
+  var from = document.getElementById('wDateFrom').value;
+  var to = document.getElementById('wDateTo').value;
+  STATE.withdrawalFiltered = STATE.withdrawal.filter(function(w) {
+    // Always restrict to allowed codes
+    if (ALLOWED_CODES.indexOf(w.itemCode) === -1) return false;
+    var matchQ = !q || (w.itemCode||'').toLowerCase().includes(q) || (w.desc||'').toLowerCase().includes(q) || (w.withdrawalNo||'').toLowerCase().includes(q) || (w.salesOrderNo||'').toLowerCase().includes(q) || (w.shipmentNo||'').toLowerCase().includes(q) || (w.customer||'').toLowerCase().includes(q);
+    return matchQ;
+  });
+  STATE.wPage = 1;
+  renderWithdrawal();
+}
+
+function clearWFilter() {
+  document.getElementById('wFilter').value = '';
+  document.getElementById('wDateFrom').value = '';
+  document.getElementById('wDateTo').value = '';
+  STATE.withdrawalFiltered = [];
+  STATE.wPage = 1;
+  renderWithdrawal();
+}
+
+function filterReceived() {
+  var q = document.getElementById('rFilter').value.toLowerCase();
+  STATE.receivedFiltered = STATE.received.filter(function(r) {
+    return !q || (r.itemCode||'').toLowerCase().includes(q) || (r.desc||'').toLowerCase().includes(q) || (r.mrrNo||'').toLowerCase().includes(q) || (r.supplier||'').toLowerCase().includes(q);
+  });
+  STATE.rPage = 1;
+  renderReceived();
+}
+
+function clearRFilter() {
+  document.getElementById('rFilter').value = '';
+  document.getElementById('rDateFrom').value = '';
+  document.getElementById('rDateTo').value = '';
+  STATE.receivedFiltered = [];
+  STATE.rPage = 1;
+  renderReceived();
+}
+
+// ── Item Picker state ──
+var pickerMatches = [];      // all items matching current typed query
+var pickerSelected = {};     // { itemCode: true } — user-ticked items
+var activeSearchCodes = [];  // codes actually used in the last search (null = all)
+
+var searchDebounce = null;
+function handleSearchInput(val) {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(function() { showPicker(val); }, 180);
+}
+
+function showPicker(val) {
+  var picker = document.getElementById('itemPicker');
+  if (!val || val.length < 1) { picker.style.display = 'none'; pickerMatches = []; return; }
+  var v = val.toLowerCase();
+
+  // Build item matches
+  var itemMatches = STATE.items.filter(function(item) {
+    return item.code.toLowerCase().includes(v) || item.desc.toLowerCase().includes(v);
+  });
+
+  pickerMatches = itemMatches;
+
+  if (!pickerMatches.length) { picker.style.display = 'none'; return; }
+
+  // Auto-select ONLY items whose code is an exact prefix-match (case-insensitive)
+  // so typing "BPYB" pre-ticks BPYB but not A4_BPYB / BPYB_24X36 etc.
+  pickerMatches.forEach(function(item) {
+    if (!(item.code in pickerSelected)) {
+      pickerSelected[item.code] = item.code.toLowerCase() === v;
+    }
+  });
+
+  renderPicker();
+  document.getElementById('pickerTitle').textContent = pickerMatches.length + ' item' + (pickerMatches.length > 1 ? 's' : '') + ' found — tick to include in search';
+
+  // Position picker below the search input using fixed coords
+  var inputEl = document.getElementById('globalSearch');
+  var rect = inputEl.getBoundingClientRect();
+  picker.style.top = (rect.bottom + 4) + 'px';
+  picker.style.left = rect.left + 'px';
+  picker.style.display = 'block';
+}
+
+function renderPicker() {
+  var html = '';
+  pickerMatches.forEach(function(item) {
+    var checked = !!pickerSelected[item.code];
+    var safeCode = item.code.replace(/'/g, "\\'");
+    var safeId = item.code.replace(/[^a-zA-Z0-9_-]/g,'_');
+    // onmousedown + preventDefault keeps the search input focused so picker stays open
+    html += '<div class="picker-row' + (checked ? ' checked' : '') + '" onmousedown="event.preventDefault();togglePickerItem(\'' + safeCode + '\')" id="prow-' + safeId + '">'
+      + '<input type="checkbox" class="picker-checkbox" ' + (checked ? 'checked' : '') + ' onmousedown="event.preventDefault()" onclick="event.stopPropagation()">'
+      + '<span class="picker-code">' + item.code + '</span>'
+      + '<span class="picker-desc">' + item.desc + '</span>'
+      + '</div>';
+  });
+  document.getElementById('pickerList').innerHTML = html;
+}
+
+function togglePickerItem(code) {
+  pickerSelected[code] = !pickerSelected[code];
+  renderPicker();
+}
+
+function pickerSelectAll() {
+  pickerMatches.forEach(function(item){ pickerSelected[item.code] = true; });
+  renderPicker();
+}
+
+function pickerClearAll() {
+  pickerMatches.forEach(function(item){ pickerSelected[item.code] = false; });
+  renderPicker();
+}
+
+function pickerSearch() {
+  document.getElementById('itemPicker').style.display = 'none';
+  // Collect ticked codes
+  var ticked = pickerMatches.filter(function(item){ return !!pickerSelected[item.code]; }).map(function(item){ return item.code; });
+  activeSearchCodes = ticked.length ? ticked : null;
+  renderSelectedTags();
+  performSearch();
+}
+
+function renderSelectedTags() {
+  var strip = document.getElementById('selectedTags');
+  if (!activeSearchCodes || !activeSearchCodes.length) { strip.innerHTML = ''; return; }
+  var html = activeSearchCodes.map(function(code) {
+    return '<span class="sel-tag">' + code + '<span class="sel-tag-x" onclick="removeTagCode(\'' + code.replace(/'/g, "\\'") + '\')">&#10005;</span></span>';
+  }).join('');
+  strip.innerHTML = html;
+}
+
+function removeTagCode(code) {
+  if (!activeSearchCodes) return;
+  activeSearchCodes = activeSearchCodes.filter(function(c){ return c !== code; });
+  if (!activeSearchCodes.length) activeSearchCodes = null;
+  renderSelectedTags();
+  performSearch();
+}
+
+function handleSearchKey(e) {
+  if (e.key === 'Enter') {
+    // If picker is visible, treat Enter as "search with whatever is ticked (or all if none ticked)"
+    var picker = document.getElementById('itemPicker');
+    if (picker.style.display !== 'none') {
+      pickerSearch();
+    } else {
+      activeSearchCodes = null;
+      performSearch();
+    }
+    picker.style.display = 'none';
+  }
+  if (e.key === 'Escape') document.getElementById('itemPicker').style.display = 'none';
+}
+
+function performSearch() {
+  var q = document.getElementById('globalSearch').value.trim();
+  var category = document.getElementById('searchFilter').value;
+  var type = document.getElementById('searchType').value;
+  if (!q && (!activeSearchCodes || !activeSearchCodes.length)) { clearSearch(); return; }
+
+  // Determine effective codes filter
+  var codes = activeSearchCodes; // null = no restriction (use q), array = restrict to these codes
+
+  var wResults = [], rResults = [], retResults = [];
+
+  if (category === 'all' || category === 'withdrawal') {
+    wResults = STATE.withdrawal.filter(function(w) {
+      if (codes) return codes.indexOf(w.itemCode) !== -1;
+      if (type==='item') return (w.itemCode||'').toLowerCase().includes(q.toLowerCase());
+      if (type==='cutting') return (w.withdrawalNo||'').toLowerCase().includes(q.toLowerCase());
+      if (type==='shipment') return (w.shipmentNo||'').toLowerCase().includes(q.toLowerCase());
+      if (type==='customer') return (w.customer||'').toLowerCase().includes(q.toLowerCase());
+      return (w.itemCode||'').toLowerCase().includes(q.toLowerCase()) || (w.desc||'').toLowerCase().includes(q.toLowerCase()) || (w.withdrawalNo||'').toLowerCase().includes(q.toLowerCase()) || (w.shipmentNo||'').toLowerCase().includes(q.toLowerCase()) || (w.customer||'').toLowerCase().includes(q.toLowerCase());
+    });
+  }
+  if (category === 'all' || category === 'received') {
+    rResults = STATE.received.filter(function(r) {
+      if (codes) return codes.indexOf(r.itemCode) !== -1;
+      return (r.itemCode||'').toLowerCase().includes(q.toLowerCase()) || (r.desc||'').toLowerCase().includes(q.toLowerCase()) || (r.mrrNo||'').toLowerCase().includes(q.toLowerCase());
+    });
+  }
+  if (category === 'all' || category === 'return') {
+    retResults = STATE.returns.filter(function(r) {
+      if (codes) return codes.indexOf(r.itemCode) !== -1;
+      return (r.itemCode||'').toLowerCase().includes(q.toLowerCase()) || (r.customer||'').toLowerCase().includes(q.toLowerCase());
+    });
+  }
+
+  var totalW = wResults.reduce(function(a,w){ return a+(parseFloat(w.qty)||0); }, 0);
+  var totalR = rResults.reduce(function(a,r){ return a+(parseFloat(r.qty)||0); }, 0);
+  var totalRet = retResults.reduce(function(a,r){ return a+(parseFloat(r.qty)||0); }, 0);
+  var months = {};
+  wResults.forEach(function(w) {
+    if (!w.date) return;
+    var m = (w.date+'').substring(0,7);
+    months[m] = (months[m]||0) + (parseFloat(w.qty)||0);
+  });
+  var monthCount = Object.keys(months).length;
+  var avgPerMonth = monthCount ? Math.round(totalW/monthCount) : 0;
+
+  // Compute current stock for the filtered codes
+  var matchedCodes = {};
+  if (codes) {
+    codes.forEach(function(c){ matchedCodes[c] = true; });
+  } else {
+    wResults.forEach(function(w){ if (w.itemCode) matchedCodes[w.itemCode] = true; });
+    rResults.forEach(function(r){ if (r.itemCode) matchedCodes[r.itemCode] = true; });
+    retResults.forEach(function(r){ if (r.itemCode) matchedCodes[r.itemCode] = true; });
+    STATE.items.forEach(function(item) {
+      if (item.code.toLowerCase().includes(q.toLowerCase()) || item.desc.toLowerCase().includes(q.toLowerCase())) {
+        matchedCodes[item.code] = true;
+      }
+    });
+  }
+  var currentStock = 0;
+  Object.keys(matchedCodes).forEach(function(code) {
+    var beg = (STATE.beginning[code] && STATE.beginning[code].qty) ? parseFloat(STATE.beginning[code].qty) : 0;
+    var rec = STATE.received.filter(function(r){ return r.itemCode === code; }).reduce(function(a,r){ return a+(parseFloat(r.qty)||0); }, 0);
+    var wth = STATE.withdrawal.filter(function(w){ return w.itemCode === code; }).reduce(function(a,w){ return a+(parseFloat(w.qty)||0); }, 0);
+    var ret = STATE.returns.filter(function(r){ return r.itemCode === code; }).reduce(function(a,r){ return a+(parseFloat(r.qty)||0); }, 0);
+    currentStock += beg + rec - wth + ret;
+  });
+
+  // Label
+  var searchLabel = codes ? codes.join(', ') : '"' + q + '"';
+  document.getElementById('searchQuery').textContent = searchLabel;
+  var statsHtml = '<div class="result-stat"><div class="result-stat-label">&#128230; Current Stock</div><div class="result-stat-value" style="color:#1565C0">'+currentStock+'</div></div>';
+  statsHtml += '<div class="result-stat"><div class="result-stat-label">&#8599; Total Withdrawals</div><div class="result-stat-value" style="color:#C62828">'+totalW+'</div></div>';
+  statsHtml += '<div class="result-stat"><div class="result-stat-label">&#8600; Total Received</div><div class="result-stat-value" style="color:#2E7D32">'+totalR+'</div></div>';
+  statsHtml += '<div class="result-stat"><div class="result-stat-label">&#128200; Avg/Month Withdrawn</div><div class="result-stat-value" style="color:#E65100">'+avgPerMonth+'</div></div>';
+  statsHtml += '<div class="result-stat"><div class="result-stat-label">&#8617; Returns</div><div class="result-stat-value" style="color:#00695C">'+totalRet+'</div></div>';
+  document.getElementById('resultStats').innerHTML = statsHtml;
+
+  var tableHtml = '';
+  if (wResults.length) {
+    tableHtml += '<div style="font-size:13px;font-weight:700;color:#C62828;margin:10px 0 6px">Withdrawal Records ('+wResults.length+')</div>';
+    tableHtml += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>';
+    ['Date','Item Code','Description','Width','Length','Qty','Withdrawal No.','Shipment No.','Customer'].forEach(function(h){ tableHtml+='<th style="background:#F5F8FF;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#607D8B;text-transform:uppercase;border-bottom:2px solid #E3EAF5;white-space:nowrap">'+h+'</th>'; });
+    tableHtml += '</tr></thead><tbody>';
+    wResults.slice(0,50).forEach(function(w){
+      var item = STATE.items.find(function(it){ return it.code === w.itemCode; }) || {};
+      var desc = w.desc || item.desc || '—';
+      tableHtml+='<tr style="border-bottom:1px solid #F0F0F0"><td style="padding:8px 10px">'+(w.date||'—')+'</td><td style="padding:8px 10px;font-family:monospace;color:#1565C0;font-weight:600">'+(w.itemCode||'—')+'</td><td style="padding:8px 10px">'+desc+'</td><td style="padding:8px 10px">'+(w.width||'—')+'</td><td style="padding:8px 10px">'+(w.length||'—')+'</td><td style="padding:8px 10px;font-weight:700;color:#C62828">'+(w.qty||0)+'</td><td style="padding:8px 10px">'+(w.withdrawalNo||'—')+'</td><td style="padding:8px 10px">'+(w.shipmentNo||'—')+'</td><td style="padding:8px 10px">'+(w.customer||'—')+'</td></tr>';
+    });
+    tableHtml += '</tbody></table></div>';
+  }
+  if (rResults.length) {
+    tableHtml += '<div style="font-size:13px;font-weight:700;color:#2E7D32;margin:14px 0 6px">Received Records ('+rResults.length+')</div>';
+    tableHtml += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>';
+    ['Date','Item Code','Desc','Size','Qty','MRR#','Supplier'].forEach(function(h){ tableHtml+='<th style="background:#F5F8FF;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#607D8B;text-transform:uppercase;border-bottom:2px solid #E3EAF5">'+h+'</th>'; });
+    tableHtml += '</tr></thead><tbody>';
+    rResults.slice(0,50).forEach(function(r){ tableHtml+='<tr style="border-bottom:1px solid #F0F0F0"><td style="padding:8px 10px">'+(r.date||'—')+'</td><td style="padding:8px 10px;font-family:monospace;color:#1565C0;font-weight:600">'+(r.itemCode||'—')+'</td><td style="padding:8px 10px">'+(r.desc||'—')+'</td><td style="padding:8px 10px">'+(r.size||'—')+'</td><td style="padding:8px 10px;font-weight:700;color:#2E7D32">'+(r.qty||0)+'</td><td style="padding:8px 10px">'+(r.mrrNo||'—')+'</td><td style="padding:8px 10px">'+(r.supplier||'—')+'</td></tr>'; });
+    tableHtml += '</tbody></table></div>';
+  }
+  if (!wResults.length && !rResults.length && !retResults.length) {
+    tableHtml = '<div class="empty-state"><div class="empty-icon">&#128269;</div><div class="empty-text">No results found for '+searchLabel+'</div></div>';
+  }
+  document.getElementById('searchResultsTable').innerHTML = tableHtml;
+  document.getElementById('searchResultPanel').style.display = 'block';
+
+  if (STATE.activeTab !== 'search') switchTab('search');
+  document.getElementById('searchDetailStats').style.display = 'grid';
+  document.getElementById('searchDetailStats').innerHTML = document.getElementById('resultStats').innerHTML;
+  document.getElementById('searchDetailContent').innerHTML = tableHtml;
+}
+
+function clearSearch() {
+  document.getElementById('globalSearch').value = '';
+  document.getElementById('itemPicker').style.display = 'none';
+  document.getElementById('searchResultPanel').style.display = 'none';
+  document.getElementById('searchDetailStats').style.display = 'none';
+  document.getElementById('selectedTags').innerHTML = '';
+  pickerMatches = [];
+  pickerSelected = {};
+  activeSearchCodes = [];
+  document.getElementById('searchDetailContent').innerHTML = '<div class="empty-state" style="padding:60px 20px;background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border)"><div class="empty-icon" style="font-size:50px">&#128269;</div><div class="empty-text" style="font-size:15px;margin-top:8px">Use the search bar above to find items</div><div style="font-size:13px;color:#90A4AE;margin-top:6px">Search by item code, description, cutting no., or shipment no.</div></div>';
+}
+
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text || 'Loading...';
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+var toastTimer = null;
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type||'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3500);
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-input-wrap') && !e.target.closest('.item-picker')) {
+    document.getElementById('itemPicker').style.display = 'none';
+  }
+});
+
+// ── PIN Modal Functions ──
+function _updatePinDots() {
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('pind' + i);
+    if (dot) dot.classList.toggle('filled', i < _pinInput.length);
+  }
+}
+
+function pinKey(digit) {
+  if (_pinInput.length >= 4) return;
+  document.getElementById('pinError').textContent = '';
+  _pinInput += digit;
+  _updatePinDots();
+  if (_pinInput.length === 4) setTimeout(_verifyPin, 220);
+}
+
+function pinBackspace() {
+  _pinInput = _pinInput.slice(0, -1);
+  _updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function _verifyPin() {
+  if (_pinInput === PIN_CODE) {
+    _pinUnlocked = true;
+    document.getElementById('pinOverlay').classList.remove('show');
+    document.getElementById('pinError').textContent = '';
+    _pinInput = '';
+    _updatePinDots();
+    if (_pinTargetTab) {
+      var t = _pinTargetTab;
+      _pinTargetTab = null;
+      _doSwitchTab(t);
+    }
+  } else {
+    document.getElementById('pinError').textContent = 'Incorrect PIN. Please try again.';
+    _pinInput = '';
+    _updatePinDots();
+  }
+}
+
+function pinCancel() {
+  document.getElementById('pinOverlay').classList.remove('show');
+  _pinInput = '';
+  _pinTargetTab = null;
+  _updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+// Allow keyboard entry in the PIN modal
+document.addEventListener('keydown', function(e) {
+  var overlay = document.getElementById('pinOverlay');
+  if (!overlay || !overlay.classList.contains('show')) return;
+  if (e.key >= '0' && e.key <= '9') { pinKey(e.key); e.preventDefault(); }
+  else if (e.key === 'Backspace') { pinBackspace(); e.preventDefault(); }
+  else if (e.key === 'Escape') { pinCancel(); e.preventDefault(); }
+});
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+
+
+<!-- PIN Modal -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box">
+    <div style="font-size:34px;margin-bottom:10px">&#128274;</div>
+    <h2>PIN Required</h2>
+    <p>Enter your 4-digit PIN to access this tab.</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pind0"></div>
+      <div class="pin-dot" id="pind1"></div>
+      <div class="pin-dot" id="pind2"></div>
+      <div class="pin-dot" id="pind3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <div></div>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key del" onclick="pinBackspace()">&#9003;</button>
+    </div>
+    <div class="pin-errmsg" id="pinError"></div>
+    <button class="pin-cancel" onclick="pinCancel()">Cancel</button>
+  </div>
+</div>
+
+<footer class="app-footer">
+  &copy; 2026 Richard Eugenio. All rights reserved.
+</footer>
+
+</body></html>
