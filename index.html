@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0053)file:///C:/Users/WAREHOUSE-PC/Downloads/index_10.html -->
+<!-- saved from url=(0053)file:///C:/Users/WAREHOUSE-PC/Downloads/index_11.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YMCC Inventory System</title>
@@ -279,7 +279,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 <!-- SUMMARY TAB -->
 <div class="tab-panel active" id="tab-summary">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 07:00 PM</div><div class="stat-sub">auto-syncs hourly</div></div>
+    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 07:06 PM</div><div class="stat-sub">auto-syncs hourly</div></div>
     <!-- hidden stat holders so JS still works -->
     <span id="totalItems" style="display:none">321</span>
     <span id="totalReceived" style="display:none">390</span>
@@ -2250,7 +2250,7 @@ function parseWithdrawalCSV(csvText) {
   var iLength  = hIdx(['length','l'])                                            !== -1 ? hIdx(['length','l'])                                            : 7;
   var iQty     = hIdx(['qty','quantity','qty withdrawn'])                        !== -1 ? hIdx(['qty','quantity','qty withdrawn'])                        : 9;
   var iBalance = hIdx(['avail bal','available balance','balance','bal'])         !== -1 ? hIdx(['avail bal','available balance','balance','bal'])         : 10;
-  var iSoNo    = hIdx(['sales order no','so no','so no.','sales order'])        !== -1 ? hIdx(['sales order no','so no','so no.','sales order'])        : 11;
+  var iSoNo    = hIdx(['sales order no','so no','so no.','sales order','sales orde','sales ord']) !== -1 ? hIdx(['sales order no','so no','so no.','sales order','sales orde','sales ord']) : 11;
   var iCust    = hIdx(['customer','client','customer name'])                     !== -1 ? hIdx(['customer','client','customer name'])                     : 13;
   var iCode    = hIdx(['item code','itemcode','family_code','family code','code']) !== -1 ? hIdx(['item code','itemcode','family_code','family code','code']) : 14;
 
@@ -2303,12 +2303,14 @@ function parseWithdrawalCSV(csvText) {
       customer:     (cols[iCust]    || '').trim()
     });
   }
-  // Sort latest first
+  // Sort latest first; for same-date rows preserve sheet order (last row = highest index = shown first)
+  results.forEach(function(r, i){ r._idx = i; });
   results.sort(function(a, b) {
     var da = new Date(a.rawDate), db = new Date(b.rawDate);
     if (isNaN(da)) return 1;
     if (isNaN(db)) return -1;
-    return db - da;
+    if (db - da !== 0) return db - da;
+    return b._idx - a._idx;  // same date: last row in sheet shown first
   });
   if (results.length) STATE.withdrawal = results;
 }
