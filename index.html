@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0052)file:///C:/Users/WAREHOUSE-PC/Downloads/index_2.html -->
+<!-- saved from url=(0052)file:///C:/Users/WAREHOUSE-PC/Downloads/index_3.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YMCC Inventory System</title>
@@ -194,7 +194,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 <div class="sync-indicator show" id="syncIndicator" role="status" aria-live="polite">
   <div class="mini-spinner"></div>
   <span class="sync-txt" id="syncIndicatorText">Syncing from Google Sheets...</span>
-  <span class="sync-progress" id="syncIndicatorProgress">4/7</span>
+  <span class="sync-progress" id="syncIndicatorProgress">5/7</span>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -279,7 +279,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 <!-- SUMMARY TAB -->
 <div class="tab-panel active" id="tab-summary">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 10:32 AM</div><div class="stat-sub">auto-syncs hourly</div></div>
+    <div class="stat-card" style="--accent:#6A1B9A;flex:0 0 auto;min-width:200px"><div class="stat-label">Last Sync</div><div class="stat-value" id="lastSync" style="font-size:14px;padding-top:4px">May 18, 05:33 PM</div><div class="stat-sub">auto-syncs hourly</div></div>
     <!-- hidden stat holders so JS still works -->
     <span id="totalItems" style="display:none">321</span>
     <span id="totalReceived" style="display:none">390</span>
@@ -708,7 +708,7 @@ function parseItemCodeCSV(csvText) {
 
   var header = parseCSVLine(lines[0]);
   var codeIdx = -1, descIdx = -1;
-  var fWidthIdx = -1, fWidthUomIdx = -1, fLengthIdx = -1, fLengthUomIdx = -1, fUomIdx = -1;
+  var fWidthIdx = -1, fWidthUomIdx = -1, fLengthIdx = -1, fLengthUomIdx = -1, fFormIdx = -1, fUomIdx = -1;
 
   header.forEach(function(h, i) {
     var hl = h.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -718,22 +718,25 @@ function parseItemCodeCSV(csvText) {
     // Description
     if (hl === 'frontend canonical_description' || hl === 'frontend canonical description') descIdx = i;
     else if (descIdx === -1 && (hl === 'item description' || hl === 'description' || hl === 'desc' || hl === 'canonical_description')) descIdx = i;
-    // Size columns
-    if (hl === 'frontend width') fWidthIdx = i;
-    if (hl === 'frontend width_uo' || hl === 'frontend width uo') fWidthUomIdx = i;
-    if (hl === 'frontend length') fLengthIdx = i;
-    if (hl === 'frontend length_u' || hl === 'frontend length u') fLengthUomIdx = i;
-    if (hl === 'frontend stocking_uom' || hl === 'frontend stocking uom') fUomIdx = i;
+    // Size / dimension columns
+    if (hl === 'frontend width')                                        fWidthIdx    = i;
+    if (hl === 'frontend width_uo'  || hl === 'frontend width uo')     fWidthUomIdx = i;
+    if (hl === 'frontend length')                                       fLengthIdx   = i;
+    if (hl === 'frontend length_u'  || hl === 'frontend length u')     fLengthUomIdx= i;
+    if (hl === 'frontend form')                                         fFormIdx     = i;
+    if (hl === 'frontend stocking_uom' || hl === 'frontend stocking uom') fUomIdx   = i;
   });
 
-  // Hard-coded fallback positions (I=8, J=9, K=10, L=11, M=12, N=13, P=15)
-  if (codeIdx      === -1) codeIdx      = 8;
-  if (descIdx      === -1) descIdx      = 9;
-  if (fWidthIdx    === -1) fWidthIdx    = 10;
-  if (fWidthUomIdx === -1) fWidthUomIdx = 11;
-  if (fLengthIdx   === -1) fLengthIdx   = 12;
-  if (fLengthUomIdx=== -1) fLengthUomIdx= 13;
-  if (fUomIdx      === -1) fUomIdx      = 15;
+  // Hard-coded fallback positions — matches ITEMCODES tab as of May 2026
+  // I=8  J=9  K=10  L=11  M=12  N=13  O=14  P=15
+  if (codeIdx       === -1) codeIdx       = 8;
+  if (descIdx       === -1) descIdx       = 9;
+  if (fWidthIdx     === -1) fWidthIdx     = 10;
+  if (fWidthUomIdx  === -1) fWidthUomIdx  = 11;
+  if (fLengthIdx    === -1) fLengthIdx    = 12;
+  if (fLengthUomIdx === -1) fLengthUomIdx = 13;
+  if (fFormIdx      === -1) fFormIdx      = 14;
+  if (fUomIdx       === -1) fUomIdx       = 15;
 
   var results = [];
   var seen = {};
@@ -742,25 +745,66 @@ function parseItemCodeCSV(csvText) {
     var l = lines[i].trim();
     if (!l) continue;
     var cols = parseCSVLine(l);
-    var code = (cols[codeIdx] || '').trim();
-    var desc = (cols[descIdx] || '').trim();
+    var code = (cols[codeIdx]    || '').trim();
+    var desc = (cols[descIdx]    || '').trim();
     if (!code) continue;
 
-    // Build a readable size string: "width widthUnit x length lengthUnit stockingUom"
-    var fW   = (cols[fWidthIdx]     || '').trim();
-    var fWu  = (cols[fWidthUomIdx]  || '').trim();
-    var fL   = (cols[fLengthIdx]    || '').trim();
-    var fLu  = (cols[fLengthUomIdx] || '').trim();
-    var fUom = (cols[fUomIdx]       || '').trim();
-    var size = '';
-    if (fW && fL) {
-      var wPart = fW + (fWu ? ' ' + fWu : '');
-      var lPart = fL + (fLu ? ' ' + fLu : '');
-      size = wPart + ' x ' + lPart + (fUom ? ' ' + fUom : '');
-    } else if (fW) {
-      size = fW + (fWu ? ' ' + fWu : '') + (fUom ? ' ' + fUom : '');
-    } else if (fUom) {
-      size = fUom;
+    // ── Smart size derivation from backend columns K–P ──────────────────────
+    // K = frontend width (numeric)       L = frontend width_uo  (unit: in/m/…)
+    // M = frontend length (numeric)      N = frontend length_u  (unit: m/yds/…)
+    // O = frontend form  (ROLL/LOT/PC/…) P = frontend stocking_uom (ROLL/SQM/SQFT/A4/…)
+    //
+    // Display rules:
+    //   SQM / SQFT stocking_uom  → sheet dimensions:  "width x length"  e.g. "24 x 36"
+    //   ROLL stocking_uom        → compact roll spec:  "widthUnit x lengthVal lengthUnit"
+    //                              e.g. "42 in x 500 yds"
+    //   LOT / PC / SET form      → no size (too varied to show meaningfully)
+    //   width empty, uom present → fall back to stocking_uom pill  e.g. "A4", "SQM"
+    //   everything empty         → blank (no pill shown)
+    // ────────────────────────────────────────────────────────────────────────
+    var fW    = (cols[fWidthIdx]      || '').trim();
+    var fWu   = (cols[fWidthUomIdx]   || '').trim();
+    var fL    = (cols[fLengthIdx]     || '').trim();
+    var fLu   = (cols[fLengthUomIdx]  || '').trim();
+    var fForm = (cols[fFormIdx]       || '').trim().toUpperCase();
+    var fUom  = (cols[fUomIdx]        || '').trim().toUpperCase();
+    var size  = '';
+
+    var isSheet = (fUom === 'SQM' || fUom === 'SQFT');
+    var isRoll  = (fUom === 'ROLL' || fForm === 'ROLL');
+    var isUnit  = (fForm === 'LOT' || fForm === 'PC' || fForm === 'SET' || fForm === 'EA');
+
+    if (isUnit) {
+      // discrete unit items — no meaningful size to show
+      size = '';
+    } else if (isSheet && fW && fL) {
+      // Sheet items: show clean "width x length" (no units, keeps pill compact)
+      // Convert to integer if whole number for cleaner display e.g. "24" not "24.0"
+      var wNum = parseFloat(fW);
+      var lNum = parseFloat(fL);
+      var wStr = (wNum === Math.floor(wNum)) ? String(Math.floor(wNum)) : String(wNum);
+      var lStr = (lNum === Math.floor(lNum)) ? String(Math.floor(lNum)) : String(lNum);
+      size = wStr + ' x ' + lStr;
+    } else if (isRoll && fW && fL) {
+      // Roll items: show "width unit x length unit" e.g. "42 in x 500 yds"
+      var wNum = parseFloat(fW);
+      var lNum = parseFloat(fL);
+      var wStr = (wNum === Math.floor(wNum)) ? String(Math.floor(wNum)) : String(wNum);
+      var lStr = (lNum === Math.floor(lNum)) ? String(Math.floor(lNum)) : String(lNum);
+      var wPart = wStr + (fWu ? ' ' + fWu : '');
+      var lPart = lStr + (fLu ? ' ' + fLu : '');
+      size = wPart + ' x ' + lPart;
+    } else if (fW && fL) {
+      // Fallback for other form types that have dimensions
+      var wNum = parseFloat(fW);
+      var lNum = parseFloat(fL);
+      var wStr = (wNum === Math.floor(wNum)) ? String(Math.floor(wNum)) : String(wNum);
+      var lStr = (lNum === Math.floor(lNum)) ? String(Math.floor(lNum)) : String(lNum);
+      size = wStr + (fWu ? ' ' + fWu : '') + ' x ' + lStr + (fLu ? ' ' + fLu : '');
+    } else if (!fW && fUom) {
+      // No numeric dimensions available — use stocking_uom as label (e.g. "A4", "SQM")
+      // Capitalize first letter, lowercase the rest for cleaner display
+      size = fUom.charAt(0).toUpperCase() + fUom.slice(1).toLowerCase();
     }
 
     // Deduplicate by code — first occurrence wins
