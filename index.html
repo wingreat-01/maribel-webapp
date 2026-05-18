@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0052)file:///C:/Users/WAREHOUSE-PC/Downloads/index_5.html -->
+<!-- saved from url=(0052)file:///C:/Users/WAREHOUSE-PC/Downloads/index_6.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YMCC Inventory System</title>
@@ -191,10 +191,10 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
 </div>
 
 <!-- Non-blocking sync indicator visible during syncNow() without freezing the UI -->
-<div class="sync-indicator" id="syncIndicator" role="status" aria-live="polite">
+<div class="sync-indicator show" id="syncIndicator" role="status" aria-live="polite">
   <div class="mini-spinner"></div>
-  <span class="sync-txt" id="syncIndicatorText">Syncing...</span>
-  <span class="sync-progress" id="syncIndicatorProgress"></span>
+  <span class="sync-txt" id="syncIndicatorText">Syncing from Google Sheets...</span>
+  <span class="sync-progress" id="syncIndicatorProgress">4/7</span>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -207,7 +207,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
     </div>
     <div class="header-actions">
       <div class="sync-status" id="syncStatus"><span class="timer-dot"></span>Auto-sync every 1hr</div>
-      <button class="btn-sync" id="syncBtn" onclick="syncNow({force:true})">↻ Sync Now</button>
+      <button class="btn-sync loading" id="syncBtn" onclick="syncNow({force:true})">Syncing...</button>
       <button class="btn-sync" id="settingsBtn" onclick="toggleSetupPanel()" title="Show setup / config panel" style="background:#FFF3E0;color:#E65100">⚙ Settings</button>
     </div>
   </div>
@@ -375,7 +375,7 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
     <div class="table-wrap">
       <table>
         <thead><tr><th>Date</th><th>Item Code</th><th>Description</th><th>Width</th><th>Length</th><th>Qty Withdrawn</th><th>Balance</th><th>Withdrawal No.</th><th>Sales Order No.</th><th>Customer</th><th>Shipment No.</th></tr></thead>
-        <tbody id="withdrawalBody"><tr><td style="white-space:nowrap">May 8, 2026</td><td class="td-code">SPYB_24X36</td><td style="color:#455A64">Satin Paper YB 24 X 36</td><td style="color:#546E7A">D</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#2E7D32">985016</td><td><span class="pill pill-blue">14:42</span></td><td><span class="pill pill-blue">3000</span></td><td>24</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Hi-Gloss YB A4 Size</td><td style="color:#546E7A">K</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">8:36</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">K</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">8:36</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_BPBB</td><td style="color:#455A64">PP GLOSS A4 Size</td><td style="color:#546E7A">D</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">14:20</span></td><td><span class="pill pill-blue">3</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_BPYB</td><td style="color:#455A64">PP MATTE A4 Size</td><td style="color:#546E7A">D</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#2E7D32">1785000</td><td><span class="pill pill-blue">14:20</span></td><td><span class="pill pill-blue">3</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 2, 2026</td><td class="td-code">A4_BPBB</td><td style="color:#455A64">Bookpaper BB A4 Size</td><td style="color:#546E7A">B</td><td style="color:#546E7A">JASMIN</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">8:59</span></td><td><span class="pill pill-blue">400000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Apr 20, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Hi-Gloss YB A4 Size</td><td style="color:#546E7A">B</td><td style="color:#546E7A">JASMIN</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">8:53</span></td><td><span class="pill pill-blue">200000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Apr 11, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">G</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">9:31</span></td><td><span class="pill pill-blue">20000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Mar 13, 2026</td><td class="td-code">A4_BPBB</td><td style="color:#455A64">Bookpaper BB A4 Size</td><td style="color:#546E7A">B</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">11:28</span></td><td><span class="pill pill-blue">400000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Feb 3, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">16:28</span></td><td><span class="pill pill-blue">10</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Jan 12, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">K</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">11:32</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Jan 8, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">A</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">14:35</span></td><td><span class="pill pill-blue">3</span></td><td>8.25</td><td><span class="pill pill-blue">PCS</span></td></tr><tr><td style="white-space:nowrap">Dec 10, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">A</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">12:00</span></td><td><span class="pill pill-blue">252450</span></td><td>210</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Dec 10, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">15:22</span></td><td><span class="pill pill-blue">50</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Dec 3, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">4:04</span></td><td><span class="pill pill-blue">40</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 28, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">E</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">13:28</span></td><td><span class="pill pill-blue">4000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 28, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">E</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">13:26</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 21, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">F</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">8:23</span></td><td><span class="pill pill-blue">2000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 13, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#EF6C00">0</td><td><span class="pill pill-blue">15:37</span></td><td><span class="pill pill-blue">10</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr></tbody>
+        <tbody id="withdrawalBody"><tr><td style="white-space:nowrap">May 8, 2026</td><td class="td-code">SPYB_24X36</td><td style="color:#455A64">Satin Paper YB 24 X 36</td><td style="color:#546E7A">D</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">14:42</span></td><td><span class="pill pill-blue">3000</span></td><td>24</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Hi-Gloss YB A4 Size</td><td style="color:#546E7A">K</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">8:36</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">K</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">8:36</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_BPBB</td><td style="color:#455A64">PP GLOSS A4 Size</td><td style="color:#546E7A">D</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">14:20</span></td><td><span class="pill pill-blue">3</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 4, 2026</td><td class="td-code">A4_BPYB</td><td style="color:#455A64">PP MATTE A4 Size</td><td style="color:#546E7A">D</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">14:20</span></td><td><span class="pill pill-blue">3</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">May 2, 2026</td><td class="td-code">A4_BPBB</td><td style="color:#455A64">Bookpaper BB A4 Size</td><td style="color:#546E7A">B</td><td style="color:#546E7A">JASMIN</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">8:59</span></td><td><span class="pill pill-blue">400000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Apr 20, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Hi-Gloss YB A4 Size</td><td style="color:#546E7A">B</td><td style="color:#546E7A">JASMIN</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">8:53</span></td><td><span class="pill pill-blue">200000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Apr 11, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">G</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">9:31</span></td><td><span class="pill pill-blue">20000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Mar 13, 2026</td><td class="td-code">A4_BPBB</td><td style="color:#455A64">Bookpaper BB A4 Size</td><td style="color:#546E7A">B</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">11:28</span></td><td><span class="pill pill-blue">400000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Feb 3, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">16:28</span></td><td><span class="pill pill-blue">10</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Jan 12, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">K</td><td style="color:#546E7A">JISSICA</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">11:32</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Jan 8, 2026</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">A</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">14:35</span></td><td><span class="pill pill-blue">3</span></td><td>8.25</td><td><span class="pill pill-blue">PCS</span></td></tr><tr><td style="white-space:nowrap">Dec 10, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">A</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">12:00</span></td><td><span class="pill pill-blue">252450</span></td><td>210</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Dec 10, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">15:22</span></td><td><span class="pill pill-blue">50</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Dec 3, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">4:04</span></td><td><span class="pill pill-blue">40</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 28, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">E</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">13:28</span></td><td><span class="pill pill-blue">4000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 28, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">E</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">13:26</span></td><td><span class="pill pill-blue">10000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 21, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">F</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">8:23</span></td><td><span class="pill pill-blue">2000</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr><tr><td style="white-space:nowrap">Nov 13, 2025</td><td class="td-code">A4_HGYB</td><td style="color:#455A64">Bookpaper YB A4 Size</td><td style="color:#546E7A">L</td><td style="color:#546E7A">KATHY</td><td style="font-weight:700;color:#C62828">0</td><td style="font-weight:700;color:#90A4AE">—</td><td><span class="pill pill-blue">15:37</span></td><td><span class="pill pill-blue">10</span></td><td>8.25</td><td><span class="pill pill-blue">SHT</span></td></tr></tbody>
       </table>
     </div>
     <div class="pagination" id="wPagination" style="display:none">
@@ -1140,14 +1140,12 @@ function renderWithdrawal() {
   if (STATE.wPage > pages) STATE.wPage = pages;
   var start = (STATE.wPage - 1) * STATE.pageSize;
   var display = source.slice(start, start + STATE.pageSize);
-  // Running balance is computed across ALL withdrawals (not just the current page)
-  // so rows on page 2 still reflect everything on page 1.
-  computeWithdrawalBalances();
   var html = '';
   display.forEach(function(w) {
     var item = STATE.items.find(function(it){ return it.code === w.itemCode; }) || {};
     var desc = w.desc || item.desc || '—';
-    var bal = (typeof w._balance === 'number') ? w._balance : null;
+    // Balance comes directly from sheet col K (Avail Bal)
+    var bal = (w.balance !== null && w.balance !== undefined && !isNaN(w.balance)) ? w.balance : null;
     var balColor = bal === null ? '#90A4AE' : (bal < 0 ? '#C62828' : (bal === 0 ? '#EF6C00' : '#2E7D32'));
     var balText = bal === null ? '—' : bal;
     html += '<tr>'
@@ -2209,22 +2207,20 @@ function fetchCSV(url, onSuccess, onError, opts) {
 }
 
 function parseWithdrawalCSV(csvText) {
-  // Column mapping (0-indexed) — Sales Order tab layout:
-  // A=0  date
-  // B=1  withdrawal no
-  // G=6  width
-  // H=7  length
-  // J=9  qty withdrawn
-  // L=11 sales order no
-  // M=12 shipment no
-  // N=13 customer
-  // O=14 item code   (legacy — may now be blank or absent)
-  // S=18 item description (new primary source — used to resolve item code via DESC_TO_CODE map)
+  // Column mapping (0-indexed) — WITHDRAWAL / W1_Stock_Monitoring tab layout:
+  // A=0   date
+  // B=1   withdrawal no
+  // E=4   shipment no (Invoice No)
+  // G=6   width
+  // H=7   length
+  // J=9   qty withdrawn
+  // K=10  available balance (Avail Bal — already computed by the sheet)
+  // L=11  sales order no
+  // N=13  customer
+  // O=14  item code  ← PRIMARY source
   //
-  // Resolution order for item code:
-  //   1. Column S description  → DESC_TO_CODE lookup  (new source)
-  //   2. Column S description  → STATE.items desc match (flexible fallback)
-  //   3. Column O code as-is   (legacy fallback)
+  // Description is resolved from the ITEMCODES tab via STATE.items (col J = desc),
+  // keyed by the item code from col O.
   var lines = csvText.split('\n');
   if (lines.length < 2) return;
   var results = [];
@@ -2233,42 +2229,11 @@ function parseWithdrawalCSV(csvText) {
     var cols = parseCSVLine(lines[i]);
     var qty = parseFloat(cols[9]) || 0;
 
-    // --- Resolve item code ---
-    var rawDesc = (cols[18] || '').trim();           // column S: item description
-    var colOCode = (cols[14] || '').trim();           // column O: legacy item code
-    var itemCode = '';
-    var resolvedDesc = '';
+    // Item code — column O (index 14), primary source
+    var itemCode = (cols[14] || '').trim();
 
-    if (rawDesc) {
-      var descKey = rawDesc.toLowerCase().replace(/\s+/g, ' ');
-      // 1. Exact match in DESC_TO_CODE map
-      if (DESC_TO_CODE[descKey]) {
-        itemCode = DESC_TO_CODE[descKey];
-        resolvedDesc = rawDesc;
-      } else {
-        // 2. Fuzzy match against STATE.items descriptions (catches minor spacing/case differences)
-        var matched = STATE.items.find(function(it) {
-          return it.desc && it.desc.toLowerCase().trim() === descKey;
-        });
-        if (matched) {
-          itemCode = matched.code;
-          resolvedDesc = rawDesc;
-        }
-      }
-    }
-
-    // 3. Fall back to column O legacy code if description lookup failed
-    if (!itemCode && colOCode) {
-      itemCode = colOCode;
-    }
-
-    if (!itemCode && !qty) continue;
-
-    var rawDate = (cols[0] || '').trim();
-
-    // Legacy width-based remapping (kept for backward compatibility with old rows
-    // that still use the old base codes in column O)
-    if (!resolvedDesc && (itemCode === 'VG' || itemCode === 'VC40YB' || itemCode === 'SPYB')) {
+    // Width-based sub-code remapping for items that share a base code
+    if (itemCode === 'VG' || itemCode === 'VC40YB' || itemCode === 'SPYB') {
       var rawWidth = parseFloat((cols[6] || '').trim());
       if (itemCode === 'VG') {
         if (rawWidth == 0.915) itemCode = 'VG36';
@@ -2282,18 +2247,28 @@ function parseWithdrawalCSV(csvText) {
       }
     }
 
+    if (!itemCode && !qty) continue;
+
+    // Description from ITEMCODES tab (STATE.items), keyed by item code
     var item = STATE.items.find(function(it) { return it.code === itemCode; }) || {};
+
+    // Balance — read directly from col K (index 10); sheet already computes it
+    var sheetBalance = (cols[10] || '').trim();
+    var balance = sheetBalance !== '' ? parseFloat(sheetBalance) : null;
+
+    var rawDate = (cols[0] || '').trim();
     results.push({
       rawDate: rawDate,
       date: formatRawDate(rawDate),
       itemCode: itemCode,
-      desc: resolvedDesc || item.desc || '',
+      desc: item.desc || '',
       withdrawalNo: (cols[1]  || '').trim(),
+      shipmentNo:   (cols[4]  || '').trim(),   // col E = Invoice No / Shipment No
       width:        (cols[6]  || '').trim(),
       length:       (cols[7]  || '').trim(),
       qty: qty,
+      balance: balance,                         // direct from col K
       salesOrderNo: (cols[11] || '').trim(),
-      shipmentNo:   (cols[12] || '').trim(),
       customer:     (cols[13] || '').trim()
     });
   }

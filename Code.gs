@@ -211,7 +211,7 @@ function _handleWrite(body) {
 // =============================================================================
 
 function _openSS() {
-  if (!SHEET_ID || SHEET_ID === 'PASTE_YOUR_SHEET_ID_HERE') {
+  if (!SHEET_ID || SHEET_ID === '1mbafKFp4BeSA8xYmhl77y48YBf38UFjgJRJyDEAHxYs') {
     throw new Error('SHEET_ID is not configured. Open Code.gs and paste your Google Sheet ID.');
   }
   return SpreadsheetApp.openById(SHEET_ID);
