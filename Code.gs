@@ -265,10 +265,10 @@ function _findRowById(sh, idColIndex1Based, id) {
 // Insert or update a row in the DATA (beginning) sheet
 function _upsert(sh, code, qty, width, widthUm, length, lengthUm) {
   if (!code) return;
-  var w  = (width     !== undefined && width     !== null) ? String(width)     : '';
-  var wu = (widthUm   !== undefined && widthUm   !== null) ? String(widthUm)   : '';
-  var l  = (length    !== undefined && length    !== null) ? String(length)    : '';
-  var lu = (lengthUm  !== undefined && lengthUm  !== null) ? String(lengthUm)  : '';
+  var w  = (width    != null) ? String(width)    : '';
+  var wu = (widthUm  != null) ? String(widthUm)  : '';
+  var l  = (length   != null) ? String(length)   : '';
+  var lu = (lengthUm != null) ? String(lengthUm) : '';
   var rowIdx = _findRowByCode(sh, code);
   if (rowIdx === -1) {
     sh.appendRow([String(code), Number(qty) || 0, w, wu, l, lu]);

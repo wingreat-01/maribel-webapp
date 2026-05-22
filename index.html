@@ -1032,10 +1032,10 @@ function renderBeginning() {
     var b = STATE.beginning[item.code] || {qty:0, remarks:''};
     var qty = (b.qty !== undefined && b.qty !== null) ? b.qty : 0;
     var remarks = b.remarks || '';
-    var iWidth   = item.width   || '';
-    var iWidthUm = item.widthUm || '';
-    var iLength  = item.length  || '';
-    var iLengthUm= item.lengthUm|| '';
+    var iWidth    = item.width    || '';
+    var iWidthUm  = item.widthUm  || '';
+    var iLength   = item.length   || '';
+    var iLengthUm = item.lengthUm || '';
     var safeId = item.code.replace(/[^a-zA-Z0-9_-]/g,'_');
     html += '<tr>'
       +'<td class="td-code">'+item.code+' <span class="beg-save-dot" id="begdot-'+safeId+'" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:4px;vertical-align:middle"></span></td>'
