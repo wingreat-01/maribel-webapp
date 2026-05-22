@@ -1057,8 +1057,8 @@ function saveAllBeginning() {
     var remEl = document.querySelector('.beg-rem-input[data-code="'+code+'"]');
     var remarks = remEl ? remEl.value : '';
     var item = STATE.items.find(function(i){ return i.code === code; }) || {};
-    STATE.beginning[code] = {qty: qty, remarks: remarks, desc: item.desc, unit: item.unit};
-    items.push({code: code, qty: qty, remarks: remarks, desc: item.desc||'', unit: item.unit||''});
+    STATE.beginning[code] = {qty: qty, remarks: remarks, desc: item.desc, unit: item.unit, size: item.size || item.unit || ''};
+    items.push({code: code, qty: qty, remarks: remarks, desc: item.desc||'', unit: item.unit||'', size: item.size || item.unit || ''});
     saved++;
   });
   saveState();
@@ -1083,7 +1083,7 @@ function onBegQtyChange(input) {
   var qty = parseFloat(input.value) || 0;
   var item = STATE.items.find(function(i){ return i.code === code; }) || {};
   var existing = STATE.beginning[code] || {};
-  STATE.beginning[code] = {qty: qty, remarks: existing.remarks || '', desc: item.desc, unit: item.unit};
+  STATE.beginning[code] = {qty: qty, remarks: existing.remarks || '', desc: item.desc, unit: item.unit, size: item.size || item.unit || ''};
   renderSummary();
   scheduleBegAutoSave(code);
 }
@@ -1093,7 +1093,7 @@ function onBegRemarksChange(input) {
   var remarks = input.value;
   var item = STATE.items.find(function(i){ return i.code === code; }) || {};
   var existing = STATE.beginning[code] || {};
-  STATE.beginning[code] = {qty: existing.qty || 0, remarks: remarks, desc: item.desc, unit: item.unit};
+  STATE.beginning[code] = {qty: existing.qty || 0, remarks: remarks, desc: item.desc, unit: item.unit, size: item.size || existing.size || ''};
   scheduleBegAutoSave(code);
 }
 
@@ -1108,7 +1108,7 @@ function scheduleBegAutoSave(code) {
   begAutoSaveTimers[code] = setTimeout(function() {
     var b = STATE.beginning[code] || {};
     postToScript(
-      {action:'save_beginning_single', item: {code: code, qty: b.qty||0, remarks: b.remarks||'', desc: b.desc||'', unit: b.unit||''}},
+      {action:'save_beginning_single', item: {code: code, qty: b.qty||0, remarks: b.remarks||'', desc: b.desc||'', unit: b.unit||'', size: b.size||''}},
       function(){ setBegDot(code, 'ok'); },
       function(err){ setBegDot(code, 'err'); console.warn('Auto-save failed for '+code+': '+err); showToast('Save failed for '+code+': '+err, 'error'); }
     );
@@ -1316,7 +1316,7 @@ function saveBeginning() {
   if (!code) { showToast('Please select an item code','error'); return; }
   if (qty === '' || isNaN(qty)) { showToast('Please enter a valid quantity','error'); return; }
   var item = STATE.items.find(function(i){ return i.code === code; }) || {};
-  STATE.beginning[code] = {qty: parseFloat(qty), remarks: remarks, desc: item.desc, unit: item.unit};
+  STATE.beginning[code] = {qty: parseFloat(qty), remarks: remarks, desc: item.desc, unit: item.unit, size: item.size || item.unit || ''};
   saveState();
   renderBeginning();
   renderSummary();
