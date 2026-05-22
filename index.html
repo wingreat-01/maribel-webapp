@@ -307,7 +307,10 @@ tbody td{padding:9px 12px;color:#263238;vertical-align:middle}
           <tr>
             <th>Item Code</th>
             <th>Description</th>
-            <th>Size</th>
+            <th>Width</th>
+            <th>W-UM</th>
+            <th>Length</th>
+            <th>L-UM</th>
             <th>Beginning</th>
             <th>Received</th>
             <th>Withdrawn</th>
@@ -902,7 +905,7 @@ function renderAll() {
 
 function renderSummary() {
   var body = document.getElementById('summaryBody');
-  if (!STATE.items.length) { body.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">&#128230;</div><div class="empty-text">No items found</div></div></td></tr>'; return; }
+  if (!STATE.items.length) { body.innerHTML = '<tr><td colspan="12"><div class="empty-state"><div class="empty-icon">&#128230;</div><div class="empty-text">No items found</div></div></td></tr>'; return; }
 
   // Summary shows ALL items from the ITEMCODES tab.
   // ALLOWED_CODES is only used by the Withdrawal tab to restrict which withdrawal
@@ -921,15 +924,34 @@ function renderSummary() {
 
   var html = '';
   items.forEach(function(item) {
-    var beg = (STATE.beginning[item.code] && STATE.beginning[item.code].qty) ? parseFloat(STATE.beginning[item.code].qty) : 0;
+    var b        = STATE.beginning[item.code] || {};
+    var beg      = b.qty ? parseFloat(b.qty) : 0;
+    var desc     = b.desc     || item.desc || '';
+    var width    = b.width    || item.width    || '';
+    var widthUm  = b.widthUm  || item.widthUm  || '';
+    var length   = b.length   || item.length   || '';
+    var lengthUm = b.lengthUm || item.lengthUm || '';
     var rec = STATE.received.filter(function(r){ return r.itemCode === item.code; }).reduce(function(a,r){ return a + (parseFloat(r.qty)||0); }, 0);
     var wth = STATE.withdrawal.filter(function(w){ return w.itemCode === item.code; }).reduce(function(a,w){ return a + (parseFloat(w.qty)||0); }, 0);
     var ret = STATE.returns.filter(function(r){ return r.itemCode === item.code; }).reduce(function(a,r){ return a + (parseFloat(r.qty)||0); }, 0);
     var ending = beg + rec - wth + ret;
     var status = ending <= 0 ? '<span class="pill pill-red">Out of Stock</span>' : ending < 5 ? '<span class="pill pill-amber">Low Stock</span>' : '<span class="pill pill-green">In Stock</span>';
-    html += '<tr><td class="td-code">'+item.code+'</td><td>'+item.desc+'</td><td><span class="pill pill-gray">'+item.unit+'</span></td><td>'+beg+'</td><td style="color:#2E7D32;font-weight:600">'+rec+'</td><td style="color:#C62828;font-weight:600">'+wth+'</td><td style="color:#00695C;font-weight:600">'+ret+'</td><td style="font-weight:700;font-size:15px">'+ending+'</td><td>'+status+'</td></tr>';
+    html += '<tr>'
+      + '<td class="td-code">'+item.code+'</td>'
+      + '<td>'+desc+'</td>'
+      + '<td>'+width+'</td>'
+      + '<td>'+widthUm+'</td>'
+      + '<td>'+length+'</td>'
+      + '<td>'+lengthUm+'</td>'
+      + '<td>'+beg+'</td>'
+      + '<td style="color:#2E7D32;font-weight:600">'+rec+'</td>'
+      + '<td style="color:#C62828;font-weight:600">'+wth+'</td>'
+      + '<td style="color:#00695C;font-weight:600">'+ret+'</td>'
+      + '<td style="font-weight:700;font-size:15px">'+ending+'</td>'
+      + '<td>'+status+'</td>'
+      + '</tr>';
   });
-  if (!html) html = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">&#128269;</div><div class="empty-text">No items match your filter</div></div></td></tr>';
+  if (!html) html = '<tr><td colspan="12"><div class="empty-state"><div class="empty-icon">&#128269;</div><div class="empty-text">No items match your filter</div></div></td></tr>';
   body.innerHTML = html;
   document.getElementById('summaryBadge').textContent = items.length + (items.length !== STATE.items.length ? ' of ' + STATE.items.length : '') + ' items';
 
@@ -1695,13 +1717,17 @@ function syncNow(opts) {
     else if (!r.skipped) failed.push('returns');
   });
   addJob(pFetch(STATE.config.dataUrl, 'data'), function(r){
-    if (r.ok) parseDataCSV(r.text);
-    else if (!r.skipped) failed.push('data');
+    // Skip the legacy CSV parse when Apps Script is configured — read_data below
+    // is the authoritative source and reads the correct column mapping.
+    // parseDataCSV reads col B as Qty but your sheet has Description in B and
+    // BeginningQty in G, which would race and overwrite STATE.beginning with zeros.
+    if (r.ok && !STATE.config.proxyUrl) parseDataCSV(r.text);
+    else if (!r.ok && !r.skipped) failed.push('data');
   });
 
-  // 6. Read BEGINNING tab (cols A:G) from Apps Script backend — this is the
-  //    authoritative source of beginning quantities and item codes.
-  //    Any changes another user makes in the sheet will appear here on next sync.
+  // 6. Read BEGINNING tab from Apps Script backend — authoritative source.
+  //    Correctly reads col A=ItemCode, col G=BeginningQty, col I=Remarks.
+  //    Sheet edits appear in the frontend on next Sync Now.
   addJob(pAppsScript('read_data', 'beginning'), function(r){
     if (r.ok) {
       applyBackendData(r.rows);
@@ -2027,13 +2053,14 @@ function applyBackendData(rows) {
     var idx = header.indexOf(name);
     return idx >= 0 ? idx : fallback;
   }
-  var iCode    = col('itemcode',  0);
-  var iQty     = col('qty',       1);
-  var iWidth   = col('width',     2);
-  var iWidthUm = col('w-um',      3);
-  var iLength  = col('length',    4);
-  var iLenUm   = col('l-um',      5);
-  var iRemarks = col('remarks',   6);
+  var iCode    = col('itemcode',     0);
+  var iDesc    = col('description', -1);
+  var iQty     = col('qty',          1);
+  var iWidth   = col('width',        2);
+  var iWidthUm = col('w-um',         3);
+  var iLength  = col('length',       4);
+  var iLenUm   = col('l-um',         5);
+  var iRemarks = col('remarks',      6);
 
   var newBeginning = {};
   for (var i = 1; i < rows.length; i++) {
@@ -2041,6 +2068,7 @@ function applyBackendData(rows) {
     var code = String(r[iCode] != null ? r[iCode] : '').trim();
     if (!code) continue;
 
+    var desc     = iDesc   >= 0 && iDesc   < r.length ? String(r[iDesc]   || '') : '';
     var qty     = iQty     < r.length ? (parseFloat(r[iQty])     || 0)  : 0;
     var width   = iWidth   < r.length ? String(r[iWidth]   || '') : '';
     var widthUm = iWidthUm < r.length ? String(r[iWidthUm] || '') : '';
@@ -2052,10 +2080,11 @@ function applyBackendData(rows) {
     // Use data from ITEMCODES CSV if available; otherwise create a placeholder.
     var item = STATE.items.find(function(it){ return it.code === code; });
     if (!item) {
-      item = {code: code, desc: '', unit: '', size: '', width: width, widthUm: widthUm, length: length, lengthUm: lengthUm};
+      item = {code: code, desc: desc || '', unit: '', size: '', width: width, widthUm: widthUm, length: length, lengthUm: lengthUm};
       STATE.items.push(item);
     } else {
       // Keep dimension data in sync — prefer BEGINNING sheet values if set
+      if (desc)     { item.desc     = desc;     }
       if (width)    { item.width    = width;    }
       if (widthUm)  { item.widthUm  = widthUm;  }
       if (length)   { item.length   = length;   }
@@ -2065,7 +2094,7 @@ function applyBackendData(rows) {
     newBeginning[code] = {
       qty:      qty,
       remarks:  remarks,
-      desc:     item.desc  || '',
+      desc:     desc || item.desc || '',
       unit:     item.unit  || '',
       size:     item.size  || '',
       width:    width      || item.width    || '',
@@ -2098,25 +2127,36 @@ function parseDataCSV(csvText) {
   var looksLegacy = header.indexOf('type') !== -1 && header.indexOf('itemcode') !== -1;
   if (looksLegacy) { parseDataCSV_legacy14col(csvText); return; }
 
-  // --- Simple 2-column layout: col A = ItemCode, col B = Quantity ---
-  // First row may be a header (non-numeric col B) or already data.
-  var newBeginning = {};
-  var startIdx = 0;
-  var firstCols = parseCSVLine(lines[0] || '');
-  var firstQty = firstCols.length > 1 ? firstCols[1] : '';
-  var firstQtyIsNumber = firstQty !== '' && !isNaN(parseFloat(firstQty));
-  if (!firstQtyIsNumber) startIdx = 1; // treat row 0 as header
+  // Detect column positions from header row.
+  // Supports both the old 2-col layout (ItemCode, Qty) and the actual sheet layout:
+  //   A=ItemCode, B=Description, C=Width, D=W-UM, E=Length, F=L-UM,
+  //   G=BeginningQty, H=StockingUnit, I=Remarks
+  var iCode    = header.indexOf('item code');
+  if (iCode < 0) iCode = header.indexOf('itemcode');
+  if (iCode < 0) iCode = 0; // fallback: col A
 
+  var iQty     = header.indexOf('beginningqty');
+  if (iQty < 0) iQty = header.indexOf('beginning qty');
+  if (iQty < 0) iQty = header.indexOf('qty');
+  if (iQty < 0) iQty = 6; // fallback: col G (BeginningQty in your sheet)
+
+  var iRemarks = header.indexOf('remarks');
+  // iRemarks may be -1 if no remarks column — that's fine
+
+  var startIdx = 1; // always skip header row
+
+  var newBeginning = {};
   for (var i = startIdx; i < lines.length; i++) {
     if (!lines[i] || !lines[i].trim()) continue;
     var cols = parseCSVLine(lines[i]);
-    var code = (cols[0]||'').trim();
+    var code = (cols[iCode] || '').trim();
     if (!code) continue;
-    var qty = parseFloat(cols[1]) || 0;
+    var qty = (iQty < cols.length) ? (parseFloat(cols[iQty]) || 0) : 0;
+    var remarks = (iRemarks >= 0 && iRemarks < cols.length) ? (cols[iRemarks] || '').trim() : '';
     var item = STATE.items.find(function(it){ return it.code === code; }) || {};
     newBeginning[code] = {
       qty: qty,
-      remarks: '',
+      remarks: remarks,
       desc: item.desc || '',
       unit: item.unit || ''
     };
