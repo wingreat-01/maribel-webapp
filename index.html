@@ -1699,7 +1699,15 @@ function syncNow(opts) {
     else if (!r.skipped) failed.push('data');
   });
 
-  // Apps Script backend reads intentionally removed — data comes from CSV only
+  // 6. Read BEGINNING tab (cols A:G) from Apps Script backend — this is the
+  //    authoritative source of beginning quantities and item codes.
+  //    Any changes another user makes in the sheet will appear here on next sync.
+  addJob(pAppsScript('read_data', 'beginning'), function(r){
+    if (r.ok) {
+      applyBackendData(r.rows);
+      try { renderBeginning(); renderSummary(); } catch(e){}
+    } else if (!r.skipped) { failed.push('beginning'); }
+  });
 
   // Final pass when all jobs are done.
   Promise.all(jobs).then(function() {
@@ -2001,6 +2009,82 @@ function postToScript(payload, onSuccess, onError) {
     clearTimeout(timer);
     if (onError) onError(String(err && err.message ? err.message : err));
   });
+}
+
+// ===== BEGINNING tab: apply rows fetched from Apps Script (read_data action) =====
+// Expected: rows[0] = header [ItemCode, Qty, Width, W-UM, Length, L-UM, Remarks]
+//           rows[1..n] = data rows (cols A:G only — H:Q ignored).
+// This is the authoritative source; it completely replaces STATE.beginning on
+// each sync so that changes made directly in the sheet propagate to the frontend.
+// It also ensures any item codes present in the BEGINNING sheet are included in
+// STATE.items (so they show up in the Beginning tab and Summary), even if they
+// are not (yet) in the ITEMCODES CSV.
+function applyBackendData(rows) {
+  if (!rows || rows.length < 2) return;  // empty sheet — don't wipe local data
+  var header = rows[0].map(function(h){ return String(h||'').trim().toLowerCase(); });
+  // Column index lookup — fall back to position if header names differ
+  function col(name, fallback) {
+    var idx = header.indexOf(name);
+    return idx >= 0 ? idx : fallback;
+  }
+  var iCode    = col('itemcode',  0);
+  var iQty     = col('qty',       1);
+  var iWidth   = col('width',     2);
+  var iWidthUm = col('w-um',      3);
+  var iLength  = col('length',    4);
+  var iLenUm   = col('l-um',      5);
+  var iRemarks = col('remarks',   6);
+
+  var newBeginning = {};
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    var code = String(r[iCode] != null ? r[iCode] : '').trim();
+    if (!code) continue;
+
+    var qty     = iQty     < r.length ? (parseFloat(r[iQty])     || 0)  : 0;
+    var width   = iWidth   < r.length ? String(r[iWidth]   || '') : '';
+    var widthUm = iWidthUm < r.length ? String(r[iWidthUm] || '') : '';
+    var length  = iLength  < r.length ? String(r[iLength]  || '') : '';
+    var lengthUm= iLenUm   < r.length ? String(r[iLenUm]   || '') : '';
+    var remarks = iRemarks < r.length ? String(r[iRemarks] || '') : '';
+
+    // Ensure this item code exists in STATE.items so it appears in the UI.
+    // Use data from ITEMCODES CSV if available; otherwise create a placeholder.
+    var item = STATE.items.find(function(it){ return it.code === code; });
+    if (!item) {
+      item = {code: code, desc: '', unit: '', size: '', width: width, widthUm: widthUm, length: length, lengthUm: lengthUm};
+      STATE.items.push(item);
+    } else {
+      // Keep dimension data in sync — prefer BEGINNING sheet values if set
+      if (width)    { item.width    = width;    }
+      if (widthUm)  { item.widthUm  = widthUm;  }
+      if (length)   { item.length   = length;   }
+      if (lengthUm) { item.lengthUm = lengthUm; }
+    }
+
+    newBeginning[code] = {
+      qty:      qty,
+      remarks:  remarks,
+      desc:     item.desc  || '',
+      unit:     item.unit  || '',
+      size:     item.size  || '',
+      width:    width      || item.width    || '',
+      widthUm:  widthUm    || item.widthUm  || '',
+      length:   length     || item.length   || '',
+      lengthUm: lengthUm   || item.lengthUm || ''
+    };
+  }
+
+  // Merge: keep any locally-added beginning entries that are not yet in the sheet
+  // (e.g. rows added after last sync but before the next push). Sheet values win
+  // for codes that exist in both.
+  Object.keys(STATE.beginning).forEach(function(k) {
+    if (!newBeginning[k]) {
+      newBeginning[k] = STATE.beginning[k];
+    }
+  });
+
+  STATE.beginning = newBeginning;
 }
 
 // Parse the DATA tab CSV (2-column: ItemCode in A, Quantity in B) and merge

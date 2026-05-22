@@ -9,12 +9,13 @@
 var SHEET_ID = 'PASTE_YOUR_SHEET_ID_HERE';
 
 // Tab names — must match the actual tab names in your Google Sheet
-var DATA_TAB     = 'DATA';       // Beginning inventory: ItemCode | Quantity
+var DATA_TAB     = 'BEGINNING';  // Beginning inventory: cols A:G only
 var RECEIVED_TAB = 'RECEIVED';   // Received items log
 var RETURNS_TAB  = 'RETURNS';    // Returns/refunds log
 
 // Column headers — auto-created if the tab doesn't exist yet
-var DATA_HEADER     = ['ItemCode', 'Quantity', 'Width', 'W-UM', 'Length', 'L-UM'];
+// BEGINNING tab uses exactly 7 columns (A:G). Columns H:Q are ignored by this system.
+var DATA_HEADER     = ['ItemCode', 'Qty', 'Width', 'W-UM', 'Length', 'L-UM', 'Remarks'];
 var RECEIVED_HEADER = ['Date', 'ItemCode', 'Qty', 'Size', 'MRR', 'Supplier', 'Remarks', 'ID'];
 var RETURNS_HEADER  = ['Date', 'ItemCode', 'Qty', 'Size', 'Customer', 'WhdlNo', 'Remarks', 'ID'];
 
@@ -49,7 +50,7 @@ function doGet(e) {
 
     // ── Read actions (return JSON) ────────────────────────────────────────────
     if (action === 'read_data') {
-      output = _json({ok: true, rows: _getDataSheet().getDataRange().getValues()});
+      var dsh = _getDataSheet(); var lastRow = dsh.getLastRow(); output = _json({ok: true, rows: lastRow < 1 ? [] : dsh.getRange(1, 1, lastRow, 7).getValues()});
       return _addCors(output);
     }
     if (action === 'read_received') {
@@ -101,14 +102,14 @@ function _handleWrite(body) {
   if (action === 'save_beginning_single') {
     var it = body.item || {};
     if (!it.code) return _json({ok: false, error: 'Missing item code'});
-    _upsert(_getDataSheet(), it.code, it.qty, it.width||'', it.widthUm||'', it.length||'', it.lengthUm||'');
+    _upsert(_getDataSheet(), it.code, it.qty, it.width||'', it.widthUm||'', it.length||'', it.lengthUm||'', it.remarks||'');
     return _json({ok: true, code: it.code, qty: Number(it.qty) || 0});
   }
 
   if (action === 'save_beginning_bulk') {
     var items = body.items || [];
     var dsh = _getDataSheet();
-    items.forEach(function(it) { _upsert(dsh, it.code, it.qty, it.width||'', it.widthUm||'', it.length||'', it.lengthUm||''); });
+    items.forEach(function(it) { _upsert(dsh, it.code, it.qty, it.width||'', it.widthUm||'', it.length||'', it.lengthUm||'', it.remarks||''); });
     return _json({ok: true, count: items.length});
   }
 
@@ -164,7 +165,7 @@ function _handleWrite(body) {
     dsh.clear();
     var drows = [DATA_HEADER];
     (b.beginning || []).forEach(function(it) {
-      drows.push([String(it.code || ''), Number(it.qty) || 0, String(it.width||''), String(it.widthUm||''), String(it.length||''), String(it.lengthUm||'')]);
+      drows.push([String(it.code || ''), Number(it.qty) || 0, String(it.width||''), String(it.widthUm||''), String(it.length||''), String(it.lengthUm||''), String(it.remarks||'')]);
     });
     dsh.getRange(1, 1, drows.length, DATA_HEADER.length).setValues(drows);
 
@@ -262,18 +263,20 @@ function _findRowById(sh, idColIndex1Based, id) {
   return -1;
 }
 
-// Insert or update a row in the DATA (beginning) sheet
-function _upsert(sh, code, qty, width, widthUm, length, lengthUm) {
+// Insert or update a row in the BEGINNING sheet (cols A:G only — never touches H:Q)
+function _upsert(sh, code, qty, width, widthUm, length, lengthUm, remarks) {
   if (!code) return;
-  var w  = (width    != null) ? String(width)    : '';
-  var wu = (widthUm  != null) ? String(widthUm)  : '';
-  var l  = (length   != null) ? String(length)   : '';
-  var lu = (lengthUm != null) ? String(lengthUm) : '';
+  var w   = (width    != null) ? String(width)    : '';
+  var wu  = (widthUm  != null) ? String(widthUm)  : '';
+  var l   = (length   != null) ? String(length)   : '';
+  var lu  = (lengthUm != null) ? String(lengthUm) : '';
+  var rem = (remarks  != null) ? String(remarks)  : '';
   var rowIdx = _findRowByCode(sh, code);
   if (rowIdx === -1) {
-    sh.appendRow([String(code), Number(qty) || 0, w, wu, l, lu]);
+    sh.appendRow([String(code), Number(qty) || 0, w, wu, l, lu, rem]);
   } else {
-    sh.getRange(rowIdx, 1, 1, 6).setValues([[String(code), Number(qty) || 0, w, wu, l, lu]]);
+    // Only overwrite A:G — leave H:Q untouched by using setValues on a 7-col range
+    sh.getRange(rowIdx, 1, 1, 7).setValues([[String(code), Number(qty) || 0, w, wu, l, lu, rem]]);
   }
 }
 
