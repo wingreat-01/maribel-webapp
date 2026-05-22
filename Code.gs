@@ -14,7 +14,7 @@ var RECEIVED_TAB = 'RECEIVED';   // Received items log
 var RETURNS_TAB  = 'RETURNS';    // Returns/refunds log
 
 // Column headers — auto-created if the tab doesn't exist yet
-var DATA_HEADER     = ['ItemCode', 'Quantity'];
+var DATA_HEADER     = ['ItemCode', 'Quantity', 'Width', 'W-UM', 'Length', 'L-UM'];
 var RECEIVED_HEADER = ['Date', 'ItemCode', 'Qty', 'Size', 'MRR', 'Supplier', 'Remarks', 'ID'];
 var RETURNS_HEADER  = ['Date', 'ItemCode', 'Qty', 'Size', 'Customer', 'WhdlNo', 'Remarks', 'ID'];
 
@@ -101,14 +101,14 @@ function _handleWrite(body) {
   if (action === 'save_beginning_single') {
     var it = body.item || {};
     if (!it.code) return _json({ok: false, error: 'Missing item code'});
-    _upsert(_getDataSheet(), it.code, it.qty);
+    _upsert(_getDataSheet(), it.code, it.qty, it.width||'', it.widthUm||'', it.length||'', it.lengthUm||'');
     return _json({ok: true, code: it.code, qty: Number(it.qty) || 0});
   }
 
   if (action === 'save_beginning_bulk') {
     var items = body.items || [];
     var dsh = _getDataSheet();
-    items.forEach(function(it) { _upsert(dsh, it.code, it.qty); });
+    items.forEach(function(it) { _upsert(dsh, it.code, it.qty, it.width||'', it.widthUm||'', it.length||'', it.lengthUm||''); });
     return _json({ok: true, count: items.length});
   }
 
@@ -164,7 +164,7 @@ function _handleWrite(body) {
     dsh.clear();
     var drows = [DATA_HEADER];
     (b.beginning || []).forEach(function(it) {
-      drows.push([String(it.code || ''), Number(it.qty) || 0]);
+      drows.push([String(it.code || ''), Number(it.qty) || 0, String(it.width||''), String(it.widthUm||''), String(it.length||''), String(it.lengthUm||'')]);
     });
     dsh.getRange(1, 1, drows.length, DATA_HEADER.length).setValues(drows);
 
@@ -263,13 +263,17 @@ function _findRowById(sh, idColIndex1Based, id) {
 }
 
 // Insert or update a row in the DATA (beginning) sheet
-function _upsert(sh, code, qty) {
+function _upsert(sh, code, qty, width, widthUm, length, lengthUm) {
   if (!code) return;
+  var w  = (width     !== undefined && width     !== null) ? String(width)     : '';
+  var wu = (widthUm   !== undefined && widthUm   !== null) ? String(widthUm)   : '';
+  var l  = (length    !== undefined && length    !== null) ? String(length)    : '';
+  var lu = (lengthUm  !== undefined && lengthUm  !== null) ? String(lengthUm)  : '';
   var rowIdx = _findRowByCode(sh, code);
   if (rowIdx === -1) {
-    sh.appendRow([String(code), Number(qty) || 0]);
+    sh.appendRow([String(code), Number(qty) || 0, w, wu, l, lu]);
   } else {
-    sh.getRange(rowIdx, 1, 1, 2).setValues([[String(code), Number(qty) || 0]]);
+    sh.getRange(rowIdx, 1, 1, 6).setValues([[String(code), Number(qty) || 0, w, wu, l, lu]]);
   }
 }
 
