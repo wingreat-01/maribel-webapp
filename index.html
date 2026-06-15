@@ -944,10 +944,10 @@ function renderSummary() {
     var b        = STATE.beginning[item.code] || {};
     var beg      = b.qty ? parseFloat(b.qty) : 0;
     var desc     = b.desc     || item.desc || '';
-    var width    = b.width    || item.width    || '';
-    var widthUm  = b.widthUm  || item.widthUm  || '';
-    var length   = b.length   || item.length   || '';
-    var lengthUm = b.lengthUm || item.lengthUm || '';
+    var width    = item.width    || b.width    || '';
+    var widthUm  = item.widthUm  || b.widthUm  || '';
+    var length   = item.length   || b.length   || '';
+    var lengthUm = item.lengthUm || b.lengthUm || '';
     var rec = STATE.received.filter(function(r){ return r.itemCode === item.code; }).reduce(function(a,r){ return a + (parseFloat(r.qty)||0); }, 0);
     var wth = STATE.withdrawal.filter(function(w){ return w.itemCode === item.code; }).reduce(function(a,w){ return a + (parseFloat(w.qty)||0); }, 0);
     var ret = STATE.returns.filter(function(r){ return r.itemCode === item.code; }).reduce(function(a,r){ return a + (parseFloat(r.qty)||0); }, 0);
