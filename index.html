@@ -926,16 +926,17 @@ function renderSummary() {
   // Summary shows ALL items from the ITEMCODES tab.
   // ALLOWED_CODES is only used by the Withdrawal tab to restrict which withdrawal
   // records are displayed — it does not limit the Stock Summary.
+  var HIDDEN_CODES = ['VG', 'VG_W', 'VG_Y'];
   var q = (document.getElementById('sumSearch') ? document.getElementById('sumSearch').value : '').toLowerCase().trim();
   var items;
   if (sumFilterActive && sumFilteredCodes !== null) {
-    items = STATE.items.filter(function(item) { return sumFilteredCodes.indexOf(item.code) !== -1; });
+    items = STATE.items.filter(function(item) { return sumFilteredCodes.indexOf(item.code) !== -1 && HIDDEN_CODES.indexOf(item.code) === -1; });
   } else if (q) {
     items = STATE.items.filter(function(item) {
-      return item.code.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+      return HIDDEN_CODES.indexOf(item.code) === -1 && (item.code.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q));
     });
   } else {
-    items = STATE.items;
+    items = STATE.items.filter(function(item) { return HIDDEN_CODES.indexOf(item.code) === -1; });
   }
 
   var html = '';
